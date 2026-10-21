@@ -2,112 +2,166 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Montgó 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <style>
-  :root { --bg:#fff; --fg:#1b2a1f; --mut:#5d6b61; --acc:#2f7d32; --line:#e3e8e4; }
-  * { box-sizing:border-box; }
-  html,body { margin:0; height:100%; font:14px/1.4 system-ui,sans-serif; color:var(--fg); background:var(--bg); }
-  #map { position:absolute; inset:0 0 200px 0; }
-  #panel { position:absolute; left:12px; top:12px; width:min(330px,calc(100% - 24px)); background:var(--bg);
-           border-radius:12px; box-shadow:0 2px 14px #0004; padding:12px 14px; }
-  #panel h1 { font-size:15px; margin:0 0 8px; }
-  .tabs { display:flex; gap:6px; margin-bottom:10px; }
-  .tabs button { flex:1; padding:7px 0; border:1px solid var(--line); background:#f4f7f4; border-radius:8px;
-                 font-weight:600; cursor:pointer; color:var(--fg); }
-  .tabs button.on { background:var(--acc); color:#fff; border-color:var(--acc); }
-  #name { font-size:12px; color:var(--mut); margin-bottom:8px; }
-  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:6px 8px; margin-bottom:10px; }
-  .stats b { display:block; font-size:16px; }
-  .stats span { font-size:11px; color:var(--mut); }
-  .row { display:flex; align-items:center; gap:8px; margin-top:6px; font-size:12px; color:var(--mut); }
-  .row input[type=range] { flex:1; }
-  .btn { padding:8px 12px; border-radius:8px; border:0; background:var(--acc); color:#fff; font-weight:600; cursor:pointer; width:100%; }
-  .btn.alt { background:#f4f7f4; color:var(--fg); border:1px solid var(--line); margin-top:6px; }
-  #prof { position:absolute; left:0; right:0; bottom:0; height:200px; background:var(--bg); border-top:1px solid var(--line); }
-  #prof svg { width:100%; height:100%; display:block; }
-  #tip { position:absolute; bottom:206px; pointer-events:none; background:#1b2a1fe6; color:#fff; padding:4px 8px;
-         border-radius:6px; font-size:12px; white-space:nowrap; transform:translateX(-50%); display:none; z-index:2; }
-  .mk { width:14px; height:14px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 4px #0008; }
-  @media (prefers-color-scheme:dark) {
-    :root { --bg:#161d18; --fg:#e8efe9; --mut:#9aa99f; --line:#2b3730; }
-    .tabs button, .btn.alt { background:#1f2a23; }
+  /* Mapa 3D a pantalla completa, panel de datos flotante y perfil de altura abajo. Mismo diseño que el artifact. */
+  :root {
+    --bg: #eef1ee; --panel: #f9faf8; --fg: #17231c; --mut: #5b6b61; --line: #d5ddd7; --accent: #2b6e3f;
+    --rA: #e8590c; --rB: #1c7ed6; --rC: #9c36b5;
+    --display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    --body: 'Barlow', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101713; --panel: #19231d; --fg: #e6eee8; --mut: #93a399; --line: #2c3a31; --accent: #6cc487;
+      --rA: #ff8a3d; --rB: #5aa9f5; --rC: #c77ddc; color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--fg); font: 14px/1.4 var(--body); overflow: hidden; }
+  #app { height: 100%; display: flex; flex-direction: column; }
+  #stage { position: relative; flex: 1; min-height: 0; }
+  #map { position: absolute; inset: 0; }
+
+  #panel { position: absolute; z-index: 3; top: 12px; left: 16px; width: min(340px, calc(100% - 32px));
+           max-height: calc(100% - 24px); overflow: auto; background: var(--panel); border: 1px solid var(--line);
+           border-radius: 10px; padding: 12px 14px 14px; box-shadow: 0 6px 24px #0003; }
+  h1 { font: 700 26px/1 var(--display); letter-spacing: .02em; margin: 0; text-transform: uppercase; }
+  .sub { color: var(--mut); font-size: 12px; margin: 3px 0 10px; }
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .tab { appearance: none; cursor: pointer; text-align: left; padding: 6px 8px 7px; border-radius: 7px; color: var(--fg);
+         background: transparent; border: 1px solid var(--line); border-top: 4px solid var(--c); font: inherit; min-width: 0; }
+  .tab b { display: block; font: 700 18px/1.1 var(--display); letter-spacing: .03em; }
+  .tab span { font: 500 11px var(--mono); color: var(--mut); }
+  .tab[aria-pressed="true"] { background: var(--bg); border-color: var(--c); }
+  .tab:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #name { font-size: 12px; color: var(--mut); margin: 9px 0 8px; min-height: 2.8em; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 6px; margin: 0 0 12px; }
+  .stats div { min-width: 0; }
+  .stats dt { font-size: 11px; color: var(--mut); text-transform: uppercase; letter-spacing: .06em; }
+  .stats dd { margin: 0; font: 500 15px var(--mono); font-variant-numeric: tabular-nums; }
+  .actions { display: flex; gap: 6px; }
+  .btn { flex: 1; cursor: pointer; padding: 8px 10px; border-radius: 7px; font: 600 13px var(--body); border: 1px solid var(--line);
+         background: transparent; color: var(--fg); }
+  .btn.main { background: var(--accent); border-color: var(--accent); color: var(--panel); }
+  .btn.sat { margin-top: 6px; width: 100%; }
+
+  .pin { display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+  .pin i { display: block; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 4px #0008; background: var(--d); }
+  .lbl { order: -1; margin-bottom: 3px; white-space: nowrap; background: var(--panel); color: var(--fg); border: 1px solid var(--line);
+         border-radius: 5px; padding: 2px 7px; font: 500 11px var(--mono); box-shadow: 0 2px 8px #0003; }
+  .maplibregl-ctrl-attrib { font-size: 10px; }
+
+  #prof { position: relative; flex: none; height: 190px; background: var(--panel); border-top: 1px solid var(--line); }
+  #prof svg { width: 100%; height: 100%; display: block; touch-action: none; }
+  #tip { position: absolute; top: 8px; pointer-events: none; transform: translateX(-50%); display: none; white-space: nowrap;
+         background: var(--fg); color: var(--panel); padding: 3px 8px; border-radius: 5px; font: 500 12px var(--mono); z-index: 2; }
+  .ax { font: 500 10px var(--mono); fill: var(--mut); }
+  @media (max-width: 520px) {
+    #panel { padding: 10px 12px 12px; }
+    #name { display: none; }
+    #prof { height: 150px; }
   }
 </style>
 </head>
 <body>
-<div id="map"></div>
-<div id="tip"></div>
-<div id="panel">
-  <h1>Montgó · domingo 25-oct</h1>
-  <div class="tabs" id="tabs"></div>
-  <div id="name"></div>
-  <div class="stats" id="stats"></div>
-  <button class="btn" id="fly">▶ Sobrevuelo 3D</button>
-  <button class="btn alt" id="base">Mapa: satélite</button>
+<div id="app">
+  <div id="stage">
+    <div id="map"></div>
+    <section id="panel" aria-label="Rutas del Montgó">
+      <h1>Montgó</h1>
+      <p class="sub">Domingo 25 de octubre · salida desde Valencia</p>
+      <div class="tabs" id="tabs"></div>
+      <div id="name"></div>
+      <dl class="stats" id="stats"></dl>
+      <div class="actions">
+        <button class="btn main" id="fly" type="button">Sobrevuelo</button>
+        <button class="btn" id="frame" type="button">Ver todo</button>
+      </div>
+      <button class="btn sat" id="base" type="button">Mapa: satélite</button>
+    </section>
+  </div>
+  <div id="prof"><div id="tip"></div><div id="svgbox" style="height:100%"></div></div>
 </div>
-<div id="prof"></div>
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 const ROUTES = /*ROUTES*/null;
-const COLORS = { A:'#e8590c', B:'#1c7ed6', C:'#9c36b5' };
-const fmtH = h => Math.floor(h) + ' h ' + String(Math.round((h%1)*60)).padStart(2,'0');
+const KEYS = Object.keys(ROUTES);
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const routeColor = k => css('--r' + k);
+const fmtH = h => Math.floor(h) + ' h ' + String(Math.round((h % 1) * 60)).padStart(2, '0');
+KEYS.forEach(k => { const r = ROUTES[k]; r.total = r.dist[r.dist.length - 1]; });
 
 const map = new maplibregl.Map({
-  container:'map', center:[0.14,38.80], zoom:12.5, pitch:60, bearing:-20, maxPitch:85,
-  style:{ version:8, sources:{
-    sat:{ type:'raster', tileSize:256, maxzoom:19, attribution:'Esri World Imagery',
-          tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'] },
-    topo:{ type:'raster', tileSize:256, maxzoom:17, attribution:'© OpenTopoMap, © OpenStreetMap',
-          tiles:['https://a.tile.opentopomap.org/{z}/{x}/{y}.png','https://b.tile.opentopomap.org/{z}/{x}/{y}.png'] },
-    dem:{ type:'raster-dem', encoding:'terrarium', tileSize:256, maxzoom:15, attribution:'Mapzen / AWS Terrain Tiles',
-          tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'] }
-  }, layers:[
-    { id:'sat', type:'raster', source:'sat' },
-    { id:'topo', type:'raster', source:'topo', layout:{visibility:'none'} },
-    { id:'hill', type:'hillshade', source:'dem', paint:{'hillshade-exaggeration':0.25} }
-  ]}
+  container: 'map', center: [0.115, 38.81], zoom: 12, pitch: 60, bearing: -20, maxPitch: 85,
+  style: { version: 8, sources: {
+    sat: { type: 'raster', tileSize: 256, maxzoom: 19, attribution: 'Esri World Imagery',
+           tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'] },
+    topo: { type: 'raster', tileSize: 256, maxzoom: 17, attribution: '© OpenTopoMap (CC-BY-SA), © OpenStreetMap',
+            tiles: ['https://a.tile.opentopomap.org/{z}/{x}/{y}.png', 'https://b.tile.opentopomap.org/{z}/{x}/{y}.png'] },
+    dem: { type: 'raster-dem', encoding: 'terrarium', tileSize: 256, maxzoom: 15, attribution: 'AWS Terrain Tiles',
+           tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'] }
+  }, layers: [
+    { id: 'sat', type: 'raster', source: 'sat' },
+    { id: 'topo', type: 'raster', source: 'topo', layout: { visibility: 'none' } },
+    { id: 'hill', type: 'hillshade', source: 'dem', paint: { 'hillshade-exaggeration': 0.25 } }
+  ] }
 });
-map.addControl(new maplibregl.NavigationControl({visualizePitch:true}), 'top-right');
-map.addControl(new maplibregl.ScaleControl({unit:'metric'}));
+map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }));
 
 let cur = 'A', markers = [], hoverMk = null, flying = null;
-const geo = k => ({ type:'Feature', geometry:{type:'LineString', coordinates:ROUTES[k].pts} });
+const geo = k => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: ROUTES[k].pts } });
+
+function pin(color, label) {
+  const el = document.createElement('div'); el.className = 'pin';
+  if (label) { const l = document.createElement('span'); l.className = 'lbl'; l.textContent = label; el.appendChild(l); }
+  const d = document.createElement('i'); d.style.setProperty('--d', color); el.appendChild(d);
+  return el;
+}
+
+function frameAll(duration) {
+  const all = new maplibregl.LngLatBounds();
+  KEYS.forEach(k => ROUTES[k].pts.forEach(p => all.extend([p[0], p[1]])));
+  const narrow = innerWidth <= 520, pad = narrow ? { top: $('panel').offsetHeight + 24, bottom: 30, left: 24, right: 24 }
+                                                  : { top: 60, bottom: 60, left: 400, right: 60 };
+  map.fitBounds(all, { padding: pad, pitch: 60, bearing: -20, duration });
+}
 
 map.on('load', () => {
-  map.setTerrain({ source:'dem', exaggeration:1 });
-  Object.keys(ROUTES).forEach(k => {
-    map.addSource('trk-' + k, { type:'geojson', data:geo(k) });
-    map.addLayer({ id:'case-' + k, type:'line', source:'trk-' + k, layout:{'line-cap':'round','line-join':'round'},
-                   paint:{'line-color':'#fff','line-width':7} });
-    map.addLayer({ id:'line-' + k, type:'line', source:'trk-' + k, layout:{'line-cap':'round','line-join':'round'},
-                   paint:{'line-color':COLORS[k],'line-width':4} });
+  map.setTerrain({ source: 'dem', exaggeration: 1 });
+  KEYS.forEach(k => {
+    map.addSource('trk-' + k, { type: 'geojson', data: geo(k) });
+    map.addLayer({ id: 'case-' + k, type: 'line', source: 'trk-' + k, layout: { 'line-cap': 'round', 'line-join': 'round' },
+                   paint: { 'line-color': '#fff', 'line-width': 7 } });
+    map.addLayer({ id: 'line-' + k, type: 'line', source: 'trk-' + k, layout: { 'line-cap': 'round', 'line-join': 'round' },
+                   paint: { 'line-color': routeColor(k), 'line-width': 4 } });
   });
   select('A');
-  const all = new maplibregl.LngLatBounds();
-  Object.values(ROUTES).forEach(r => r.pts.forEach(p => all.extend([p[0], p[1]])));
-  map.fitBounds(all, { padding:{top:60,bottom:60,left:360,right:60}, pitch:60, bearing:-20, duration:0 });
+  frameAll(0);
 });
-
-function bounds(pts) {
-  const b = new maplibregl.LngLatBounds();
-  pts.forEach(p => b.extend([p[0], p[1]]));
-  return b;
-}
 
 function select(k) {
   stopFly(); cur = k;
   const r = ROUTES[k];
-  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
-  document.getElementById('name').textContent = r.name;
-  document.getElementById('stats').innerHTML = [
-    [r.km + ' km','Distancia'], ['+' + r.up + ' m','Desnivel'], [r.zmax + ' m','Alt. máx'],
-    [fmtH(r.t_up),'Subida'], [fmtH(r.t_dn),'Bajada'], [r.maxslope + ' %','Pend. máx']
-  ].map(([v,l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('');
+  document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k));
+  $('name').textContent = r.name;
+  $('stats').innerHTML = [
+    ['Distancia', String(r.km).replace('.', ',') + ' km'], ['Desnivel', '+' + r.up + ' m'], ['Alt. máx', r.zmax + ' m'],
+    ['Subida', fmtH(r.t_up)], ['Bajada', fmtH(r.t_dn)], ['Pend. máx', r.maxslope + ' %']
+  ].map(([l, v]) => `<div><dt>${l}</dt><dd>${v}</dd></div>`).join('');
   if (map.getLayer('line-' + k)) {
-    Object.keys(ROUTES).forEach(j => {
+    KEYS.forEach(j => {
       const on = j === k;
       map.setPaintProperty('line-' + j, 'line-width', on ? 5.5 : 3);
       map.setPaintProperty('line-' + j, 'line-opacity', on ? 1 : 0.75);
@@ -118,103 +172,112 @@ function select(k) {
   }
   markers.forEach(m => m.remove()); markers = [];
   r.wpts.forEach(w => {
-    const el = document.createElement('div'); el.className = 'mk';
-    el.style.background = w.name.startsWith('Inicio') ? '#2f9e44' : '#e03131';
-    markers.push(new maplibregl.Marker({element:el}).setLngLat([w.lon, w.lat])
-      .setPopup(new maplibregl.Popup({offset:10}).setText(`${w.name} · ${Math.round(w.ele)} m`)).addTo(map));
+    const start = w.name.startsWith('Inicio');
+    const label = (start ? 'Salida' : w.name.startsWith('Cumbre') ? 'Cumbre' : w.name.split(' (')[0]) + ' · ' + Math.round(w.ele) + ' m';
+    markers.push(new maplibregl.Marker({ element: pin(start ? '#2f9e44' : '#e03131', label), anchor: 'bottom' })
+      .setLngLat([w.lon, w.lat]).addTo(map));
   });
-  const el = document.createElement('div'); el.className = 'mk'; el.style.background = '#fff'; el.style.borderColor = COLORS[k];
   if (hoverMk) hoverMk.remove();
-  hoverMk = new maplibregl.Marker({element:el}).setLngLat([r.pts[0][0], r.pts[0][1]]);
+  const h = pin(routeColor(k));
+  hoverMk = new maplibregl.Marker({ element: h }).setLngLat([r.pts[0][0], r.pts[0][1]]);
   drawProfile();
 }
 
-document.getElementById('tabs').innerHTML = Object.keys(ROUTES).map(k => `<button data-k="${k}">Ruta ${k}</button>`).join('');
-document.getElementById('tabs').onclick = e => { if (e.target.dataset.k) select(e.target.dataset.k); };
+$('tabs').innerHTML = KEYS.map(k => `<button class="tab" type="button" data-k="${k}" style="--c:var(--r${k})" aria-pressed="false"><b>Ruta ${k}</b><span>${String(ROUTES[k].km).replace('.', ',')} km</span></button>`).join('');
+$('tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) select(b.dataset.k); });
 
 /* ---- perfil de elevación ---- */
-const prof = document.getElementById('prof'), tip = document.getElementById('tip');
-const M = { l:48, r:16, t:14, b:24 };
+const prof = $('prof'), tip = $('tip'), box = $('svgbox');
+const M = { l: 44, r: 16, t: 14, b: 22 };
+let P = null;
 function drawProfile() {
-  const W = prof.clientWidth, H = prof.clientHeight, all = Object.values(ROUTES);
-  const KM = Math.max(...all.map(r => r.dist[r.dist.length-1]));
+  const w = box.clientWidth, h = box.clientHeight;
+  if (!w || !h) return;
+  const all = Object.values(ROUTES), KM = Math.max(...all.map(r => r.total));
   const zs = all.flatMap(r => r.pts.map(p => p[2]));
-  const zmin = Math.floor(Math.min(...zs)/100)*100, zmax = Math.ceil(Math.max(...zs)/100)*100;
-  const x = d => M.l + d / KM * (W - M.l - M.r), y = z => M.t + (1 - (z - zmin)/(zmax - zmin)) * (H - M.t - M.b);
-  const line = r => r.pts.map((p,i) => `${i?'L':'M'}${x(r.dist[i]).toFixed(1)},${y(p[2]).toFixed(1)}`).join('');
-  let grid = '';
-  for (let z = zmin; z <= zmax; z += 100)
-    grid += `<line x1="${M.l}" x2="${W-M.r}" y1="${y(z)}" y2="${y(z)}" stroke="var(--line)"/><text x="${M.l-6}" y="${y(z)+4}" text-anchor="end" font-size="11" fill="var(--mut)">${z}</text>`;
-  for (let d = 0; d <= KM; d += 1)
-    grid += `<text x="${x(d)}" y="${H-6}" text-anchor="middle" font-size="11" fill="var(--mut)">${d} km</text>`;
-  const keys = Object.keys(ROUTES).filter(k => k !== cur).concat(cur);
-  const paths = keys.map(k => {
-    const r = ROUTES[k], on = k === cur, end = r.dist[r.dist.length-1];
-    return (on ? `<path d="${line(r)}L${x(end)},${y(zmin)}L${x(0)},${y(zmin)}Z" fill="${COLORS[k]}" opacity=".2"/>` : '') +
-      `<path d="${line(r)}" fill="none" stroke="${COLORS[k]}" stroke-width="${on ? 2.5 : 1.5}" opacity="${on ? 1 : .6}"/>`;
+  const zmin = Math.floor(Math.min(...zs) / 100) * 100, zmax = Math.ceil(Math.max(...zs) / 100) * 100;
+  const x = d => M.l + d / KM * (w - M.l - M.r), y = z => M.t + (1 - (z - zmin) / (zmax - zmin)) * (h - M.t - M.b);
+  const line = r => r.pts.map((p, i) => `${i ? 'L' : 'M'}${x(r.dist[i]).toFixed(1)},${y(p[2]).toFixed(1)}`).join('');
+  let g = '';
+  for (let z = zmin; z <= zmax; z += 100) g += `<line x1="${M.l}" x2="${w - M.r}" y1="${y(z)}" y2="${y(z)}" stroke="var(--line)"/><text class="ax" x="${M.l - 6}" y="${y(z) + 3}" text-anchor="end">${z}</text>`;
+  for (let d = 0; d <= KM; d += 1) g += `<text class="ax" x="${x(d)}" y="${h - 6}" text-anchor="middle">${d} km</text>`;
+  const order = KEYS.filter(k => k !== cur).concat(cur);
+  const paths = order.map(k => {
+    const r = ROUTES[k], on = k === cur, c = `var(--r${k})`;
+    return (on ? `<path d="${line(r)}L${x(r.total)},${y(zmin)}L${x(0)},${y(zmin)}Z" fill="${c}" opacity=".18"/>` : '') +
+      `<path d="${line(r)}" fill="none" stroke="${c}" stroke-width="${on ? 2.5 : 1.5}" opacity="${on ? 1 : .55}" stroke-linejoin="round"/>`;
   }).join('');
-  prof.innerHTML = `<svg viewBox="0 0 ${W} ${H}">${grid}${paths}
-    <line id="cur" y1="${M.t}" y2="${H-M.b}" stroke="var(--fg)" stroke-dasharray="3 3" style="display:none"/>
-    <circle id="curc" r="5" fill="#fff" stroke="${COLORS[cur]}" stroke-width="3" style="display:none"/></svg>`;
-  const total = ROUTES[cur].dist[ROUTES[cur].dist.length-1];
-  prof.onmousemove = e => {
-    const bx = prof.getBoundingClientRect(), d = (e.clientX - bx.left - M.l) / (W - M.l - M.r) * KM;
-    if (d >= 0 && d <= total) showAt(d);
-  };
-  prof.onmouseleave = () => { hide(); };
-  prof._x = x; prof._y = y;
+  box.innerHTML = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Perfil de elevación de las tres rutas">${g}${paths}
+    <line id="cl" y1="${M.t}" y2="${h - M.b}" stroke="var(--fg)" stroke-dasharray="3 3" style="display:none"/>
+    <circle id="cc" r="5" fill="var(--panel)" stroke="var(--r${cur})" stroke-width="3" style="display:none"/></svg>`;
+  P = { x, y, KM, w };
 }
 function at(d) {
   const r = ROUTES[cur]; let i = 1;
   while (i < r.dist.length - 1 && r.dist[i] < d) i++;
-  const t = (d - r.dist[i-1]) / ((r.dist[i] - r.dist[i-1]) || 1), a = r.pts[i-1], b = r.pts[i];
-  const slope = (b[2]-a[2]) / (((r.dist[i]-r.dist[i-1])*1000) || 1) * 100;
-  return { lon:a[0]+(b[0]-a[0])*t, lat:a[1]+(b[1]-a[1])*t, ele:a[2]+(b[2]-a[2])*t, slope, i };
+  const t = (d - r.dist[i - 1]) / ((r.dist[i] - r.dist[i - 1]) || 1), a = r.pts[i - 1], b = r.pts[i];
+  return { lon: a[0] + (b[0] - a[0]) * t, lat: a[1] + (b[1] - a[1]) * t, ele: a[2] + (b[2] - a[2]) * t,
+           slope: (b[2] - a[2]) / (((r.dist[i] - r.dist[i - 1]) * 1000) || 1) * 100 };
 }
-function showAt(d, px) {
-  const p = at(d), x = prof._x(d), y = prof._y(p.ele);
-  const c = document.getElementById('cur'), cc = document.getElementById('curc');
-  c.setAttribute('x1', x); c.setAttribute('x2', x); c.style.display = '';
-  cc.setAttribute('cx', x); cc.setAttribute('cy', y); cc.style.display = '';
+function showAt(d) {
+  const p = at(d), x = P.x(d), cl = $('cl'), cc = $('cc');
+  if (cl) { cl.setAttribute('x1', x); cl.setAttribute('x2', x); cl.style.display = ''; }
+  if (cc) { cc.setAttribute('cx', x); cc.setAttribute('cy', P.y(p.ele)); cc.style.display = ''; }
   hoverMk.setLngLat([p.lon, p.lat]).addTo(map);
-  tip.style.display = 'block'; tip.style.left = x + 'px';
-  tip.textContent = `${d.toFixed(2)} km · ${Math.round(p.ele)} m · ${p.slope.toFixed(0)} %`;
+  tip.style.display = 'block'; tip.style.left = Math.min(Math.max(x, 70), P.w - 70) + 'px';
+  tip.textContent = `${d.toFixed(2).replace('.', ',')} km · ${Math.round(p.ele)} m · ${Math.round(p.slope)} %`;
 }
-function hide() {
+function hideAt() {
   tip.style.display = 'none';
-  ['cur','curc'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
+  ['cl', 'cc'].forEach(id => { const e = $(id); if (e) e.style.display = 'none'; });
   if (hoverMk) hoverMk.remove();
 }
-addEventListener('resize', drawProfile);
+function onMove(e) {
+  if (flying || !P) return;
+  const rect = box.getBoundingClientRect(), d = (e.clientX - rect.left - M.l) / (P.w - M.l - M.r) * P.KM;
+  if (d >= 0 && d <= ROUTES[cur].total) showAt(d); else hideAt();
+}
+box.addEventListener('pointermove', onMove);
+box.addEventListener('pointerdown', onMove);
+box.addEventListener('pointerleave', () => { if (!flying) hideAt(); });
+new ResizeObserver(drawProfile).observe(box);
 
 /* ---- sobrevuelo ---- */
-const flyBtn = document.getElementById('fly');
-function stopFly() { if (flying) cancelAnimationFrame(flying.raf); flying = null; flyBtn.textContent = '▶ Sobrevuelo 3D'; hide(); }
-flyBtn.onclick = () => {
+const flyBtn = $('fly');
+function stopFly() { if (flying) cancelAnimationFrame(flying.raf); flying = null; flyBtn.textContent = 'Sobrevuelo'; hideAt(); }
+flyBtn.addEventListener('click', () => {
   if (flying) return stopFly();
-  const r = ROUTES[cur], total = r.dist[r.dist.length-1], dur = 40000;
-  flyBtn.textContent = '■ Parar'; let t0 = null, bearing = map.getBearing();
+  const total = ROUTES[cur].total, dur = 45000;
+  flyBtn.textContent = 'Parar'; let t0 = null, bearing = map.getBearing();
   const step = ts => {
     if (t0 === null) t0 = ts;
     const f = Math.min((ts - t0) / dur, 1), d = f * total, p = at(d), q = at(Math.min(d + 0.25, total));
     const target = Math.atan2(q.lon - p.lon, q.lat - p.lat) * 180 / Math.PI;
-    let diff = ((target - bearing + 540) % 360) - 180; bearing += diff * 0.03;
-    map.jumpTo({ center:[p.lon, p.lat], bearing, pitch:68, zoom:15.2 });
+    bearing += (((target - bearing + 540) % 360) - 180) * 0.03;
+    map.jumpTo({ center: [p.lon, p.lat], bearing, pitch: 68, zoom: 15.2 });
     showAt(d);
     if (f < 1) flying.raf = requestAnimationFrame(step); else stopFly();
   };
-  flying = { raf:requestAnimationFrame(step) };
-};
+  flying = { raf: requestAnimationFrame(step) };
+});
 map.on('mousedown', () => { if (flying) stopFly(); });
+map.on('touchstart', () => { if (flying) stopFly(); });
+$('frame').addEventListener('click', () => { stopFly(); frameAll(1200); });
 
-/* ---- controles ---- */
+/* ---- mapa base y tema ---- */
 let sat = true;
-document.getElementById('base').onclick = e => {
+$('base').addEventListener('click', e => {
   sat = !sat;
   map.setLayoutProperty('sat', 'visibility', sat ? 'visible' : 'none');
   map.setLayoutProperty('topo', 'visibility', sat ? 'none' : 'visible');
   e.target.textContent = 'Mapa: ' + (sat ? 'satélite' : 'topográfico');
-};
+});
+function applyTheme() {
+  if (!map.getLayer('line-A')) return;
+  KEYS.forEach(k => map.setPaintProperty('line-' + k, 'line-color', routeColor(k)));
+  if (hoverMk) hoverMk.getElement().firstChild.style.setProperty('--d', routeColor(cur));
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 </script>
 </body>
 </html>

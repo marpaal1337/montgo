@@ -11,6 +11,10 @@
 
 Archivos: `out/ruta_*.gpx` (track + waypoints), `out/perfil_A|B|C.png`, `out/perfil_comparativo.png`, `out/stats.json`.
 
+## Visor 3D
+
+`out/visor_3d_artifact.html` es un visor 3D autocontenido (three.js, relieve y mapa incrustados) que se abre directamente en el navegador sin servidor ni conexión. Se genera con `python scripts/fetch_tiles.py && python scripts/build_artifact.py` (requiere numpy y Pillow).
+
 ## Recomendación
 - **Grupo en forma que quiere ir a lo seguro de tiempo: A.** Señalizada (PR-CV 355), la más corta y la más cercana a Valencia. Cuidado con la cresta final (manos).
 - **Si queréis una excursión más larga: B**, más gradual. Evita la trepada fuerte.

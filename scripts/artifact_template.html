@@ -1,0 +1,361 @@
+<title>Montgó 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  /* Maqueta de montaña: escena 3D a pantalla completa, panel de datos flotante y perfil de altura abajo. */
+  :root {
+    --bg: #eef1ee;
+    --panel: #f9faf8;
+    --fg: #17231c;
+    --mut: #5b6b61;
+    --line: #d5ddd7;
+    --accent: #2b6e3f;
+    --sky-top: #bfd6e6;
+    --sky-bot: #eef1ee;
+    --skirt: #5a5a50;
+    --rA: #e8590c;
+    --rB: #1c7ed6;
+    --rC: #9c36b5;
+    --display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    --body: 'Barlow', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101713; --panel: #19231d; --fg: #e6eee8; --mut: #93a399; --line: #2c3a31; --accent: #6cc487;
+      --sky-top: #0c1620; --sky-bot: #22303a; --skirt: #2b2d28;
+      --rA: #ff8a3d; --rB: #5aa9f5; --rC: #c77ddc; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101713; --panel: #19231d; --fg: #e6eee8; --mut: #93a399; --line: #2c3a31; --accent: #6cc487;
+    --sky-top: #0c1620; --sky-bot: #22303a; --skirt: #2b2d28;
+    --rA: #ff8a3d; --rB: #5aa9f5; --rC: #c77ddc; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 var(--body); overflow: hidden; }
+  #app { height: 100%; display: flex; flex-direction: column; }
+  #stage { position: relative; flex: 1; min-height: 0; background: linear-gradient(var(--sky-top), var(--sky-bot)); }
+  #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+  #panel { position: absolute; top: 12px; left: max(16px, env(safe-area-inset-left, 0px)); width: min(340px, calc(100% - 32px));
+           max-height: calc(100% - 24px); overflow: auto; background: var(--panel); border: 1px solid var(--line);
+           border-radius: 10px; padding: 12px 14px 14px; box-shadow: 0 6px 24px #0003; }
+  h1 { font: 700 26px/1 var(--display); letter-spacing: .02em; margin: 0; text-transform: uppercase; }
+  .sub { color: var(--mut); font-size: 12px; margin: 3px 0 10px; }
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .tab { appearance: none; cursor: pointer; text-align: left; padding: 6px 8px 7px; border-radius: 7px; color: var(--fg);
+         background: transparent; border: 1px solid var(--line); border-top: 4px solid var(--c); font: inherit; min-width: 0; }
+  .tab b { display: block; font: 700 18px/1.1 var(--display); letter-spacing: .03em; }
+  .tab span { font: 500 11px var(--mono); color: var(--mut); }
+  .tab[aria-pressed="true"] { background: var(--bg); border-color: var(--c); }
+  .tab:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #name { font-size: 12px; color: var(--mut); margin: 9px 0 8px; min-height: 2.8em; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 6px; margin: 0 0 12px; }
+  .stats div { min-width: 0; }
+  .stats dt { font-size: 11px; color: var(--mut); text-transform: uppercase; letter-spacing: .06em; }
+  .stats dd { margin: 0; font: 500 15px var(--mono); font-variant-numeric: tabular-nums; }
+  .actions { display: flex; gap: 6px; }
+  .btn { flex: 1; cursor: pointer; padding: 8px 10px; border-radius: 7px; font: 600 13px var(--body); border: 1px solid var(--line);
+         background: transparent; color: var(--fg); }
+  .btn.main { background: var(--accent); border-color: var(--accent); color: var(--panel); }
+
+  .lbl { position: absolute; left: 0; top: 0; pointer-events: none; transform: translate(-50%, -140%); white-space: nowrap;
+         background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 5px; padding: 2px 7px;
+         font: 500 11px var(--mono); box-shadow: 0 2px 8px #0003; }
+  #credit { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: 6px; font-size: 10px; color: var(--mut);
+            background: color-mix(in srgb, var(--panel) 80%, transparent); padding: 1px 6px; border-radius: 4px; }
+
+  #prof { position: relative; flex: none; height: 190px; background: var(--panel); border-top: 1px solid var(--line);
+          padding-left: max(0px, env(safe-area-inset-left, 0px)); padding-right: max(0px, env(safe-area-inset-right, 0px)); }
+  #prof svg { width: 100%; height: 100%; display: block; touch-action: none; }
+  #tip { position: absolute; top: 8px; pointer-events: none; transform: translateX(-50%); display: none; white-space: nowrap;
+         background: var(--fg); color: var(--panel); padding: 3px 8px; border-radius: 5px; font: 500 12px var(--mono); }
+  .ax { font: 500 10px var(--mono); fill: var(--mut); }
+  #fail { position: absolute; inset: 0; display: none; place-items: center; padding: 24px; text-align: center; color: var(--mut); }
+  @media (max-width: 520px) {
+    #panel { padding: 10px 12px 12px; }
+    #name { display: none; }
+    #prof { height: 150px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div id="app">
+  <div id="stage">
+    <canvas id="gl"></canvas>
+    <div id="labels"></div>
+    <section id="panel" aria-label="Rutas del Montgó">
+      <h1>Montgó</h1>
+      <p class="sub">Domingo 25 de octubre · salida desde Valencia</p>
+      <div class="tabs" id="tabs"></div>
+      <div id="name"></div>
+      <dl class="stats" id="stats"></dl>
+      <div class="actions">
+        <button class="btn main" id="fly" type="button">Sobrevuelo</button>
+        <button class="btn" id="frame" type="button">Ver todo</button>
+      </div>
+    </section>
+    <div id="credit">Relieve: AWS Terrain Tiles · Mapa: © OpenTopoMap (CC-BY-SA), © OpenStreetMap</div>
+    <div id="fail">No se pudo iniciar la vista 3D en este navegador (WebGL no disponible).</div>
+  </div>
+  <div id="prof"><div id="tip"></div><div id="svgbox" style="height:100%"></div></div>
+</div>
+
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const ROUTES = /*ROUTES*/null;
+const TERRAIN = /*TERRAIN*/null;
+
+const KEYS = Object.keys(ROUTES);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const routeColor = k => css('--r' + k);
+const fmtH = h => Math.floor(h) + ' h ' + String(Math.round((h % 1) * 60)).padStart(2, '0');
+const $ = id => document.getElementById(id);
+
+/* ---------- geometría del terreno (metros, +x este, -z norte) ---------- */
+const [LON0, LAT0, LON1, LAT1] = TERRAIN.bbox, COLS = TERRAIN.cols, ROWS = TERRAIN.rows;
+const LATC = (LAT0 + LAT1) / 2, LONC = (LON0 + LON1) / 2;
+const MX = 111320 * Math.cos(LATC * Math.PI / 180), MY = 110574;
+const W = (LON1 - LON0) * MX, D = (LAT1 - LAT0) * MY;
+const toXZ = (lon, lat) => [(lon - LONC) * MX, -(lat - LATC) * MY];
+
+const raw = Uint8Array.from(atob(TERRAIN.h), c => c.charCodeAt(0));
+const HM = Float32Array.from(new Int16Array(raw.buffer), v => Math.max(v / 10, 0));
+function heightAt(x, z) {
+  const u = Math.min(Math.max((x + W / 2) / W * (COLS - 1), 0), COLS - 1.001);
+  const v = Math.min(Math.max((z + D / 2) / D * (ROWS - 1), 0), ROWS - 1.001);
+  const i = Math.floor(u), j = Math.floor(v), fu = u - i, fv = v - j, h = (a, b) => HM[b * COLS + a];
+  return (h(i, j) * (1 - fu) + h(i + 1, j) * fu) * (1 - fv) + (h(i, j + 1) * (1 - fu) + h(i + 1, j + 1) * fu) * fv;
+}
+
+/* ---------- escena ---------- */
+const canvas = $('gl'), stage = $('stage');
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+} catch (e) { $('fail').style.display = 'grid'; throw e; }
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 20, 60000);
+scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+const sun = new THREE.DirectionalLight(0xffffff, 0.45);
+sun.position.set(-3000, 4000, -2000);
+scene.add(sun);
+
+const geo = new THREE.PlaneGeometry(W, D, COLS - 1, ROWS - 1);
+geo.rotateX(-Math.PI / 2);
+const pos = geo.attributes.position;
+for (let i = 0; i < pos.count; i++) pos.setY(i, HM[i]);
+geo.computeVertexNormals();
+const tex = new THREE.TextureLoader().load(TERRAIN.tex, () => { });
+tex.encoding = THREE.sRGBEncoding;
+tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+scene.add(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map: tex })));
+
+const skirtMat = new THREE.MeshLambertMaterial({ color: 0x555555, side: THREE.DoubleSide });
+function skirt(edge) {
+  const n = edge.length, p = new Float32Array(n * 6), idx = [];
+  edge.forEach(([x, y, z], i) => { p.set([x, y, z, x, -140, z], i * 6); });
+  for (let i = 0; i < n - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setIndex(idx); g.computeVertexNormals();
+  scene.add(new THREE.Mesh(g, skirtMat));
+}
+const px = i => pos.getX(i), py = i => pos.getY(i), pz = i => pos.getZ(i), at3 = i => [px(i), py(i), pz(i)];
+skirt(Array.from({ length: COLS }, (_, i) => at3(i)));
+skirt(Array.from({ length: COLS }, (_, i) => at3((ROWS - 1) * COLS + i)));
+skirt(Array.from({ length: ROWS }, (_, j) => at3(j * COLS)));
+skirt(Array.from({ length: ROWS }, (_, j) => at3(j * COLS + COLS - 1)));
+const base = new THREE.Mesh(new THREE.PlaneGeometry(W, D).rotateX(Math.PI / 2), skirtMat);
+base.position.y = -140; scene.add(base);
+
+/* ---------- rutas ---------- */
+const LIFT = 9;
+for (const k of KEYS) {
+  const r = ROUTES[k];
+  r.v3 = r.pts.map(([lon, lat]) => { const [x, z] = toXZ(lon, lat); return new THREE.Vector3(x, heightAt(x, z) + LIFT, z); });
+  r.total = r.dist[r.dist.length - 1];
+  r.curve = new THREE.CatmullRomCurve3(r.v3, false, 'centripetal');
+  r.mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  r.mesh = null;
+}
+function buildTube(k, radius) {
+  const r = ROUTES[k];
+  if (r.mesh) { scene.remove(r.mesh); r.mesh.geometry.dispose(); }
+  r.mat.color.set(routeColor(k));
+  r.mesh = new THREE.Mesh(new THREE.TubeGeometry(r.curve, r.v3.length, radius, 6, false), r.mat);
+  r.mesh.renderOrder = k === cur ? 2 : 1;
+  scene.add(r.mesh);
+}
+
+const ball = (color, rad) => new THREE.Mesh(new THREE.SphereGeometry(rad, 16, 12), new THREE.MeshBasicMaterial({ color }));
+const hoverMk = ball(0xffffff, 16); hoverMk.visible = false; hoverMk.renderOrder = 3; scene.add(hoverMk);
+
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI * 0.47; controls.minDistance = 250; controls.maxDistance = 16000;
+controls.screenSpacePanning = false;
+
+function frameAll(animate) {
+  const to = { pos: new THREE.Vector3(-300, 4600, 6200), tgt: new THREE.Vector3(-300, 150, -250) };
+  if (!animate) { camera.position.copy(to.pos); controls.target.copy(to.tgt); controls.update(); return; }
+  tween(to.pos, to.tgt, 1200);
+}
+let twn = null;
+function tween(p, t, ms) {
+  twn = { p0: camera.position.clone(), t0: controls.target.clone(), p, t, ms, s: performance.now() };
+}
+
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(() => { resize(); drawProfile(); }).observe(stage);
+
+/* ---------- selección, panel, etiquetas ---------- */
+let cur = 'A', labels = [], wpMarks = [];
+$('tabs').innerHTML = KEYS.map(k => `<button class="tab" type="button" data-k="${k}" style="--c:var(--r${k})" aria-pressed="false"><b>Ruta ${k}</b><span>${String(ROUTES[k].km).replace('.', ',')} km</span></button>`).join('');
+$('tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) select(b.dataset.k); });
+
+function select(k) {
+  stopFly(); cur = k;
+  const r = ROUTES[k];
+  document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k));
+  $('name').textContent = r.name;
+  $('stats').innerHTML = [
+    ['Distancia', String(r.km).replace('.', ',') + ' km'], ['Desnivel', '+' + r.up + ' m'], ['Alt. máx', r.zmax + ' m'],
+    ['Subida', fmtH(r.t_up)], ['Bajada', fmtH(r.t_dn)], ['Pend. máx', r.maxslope + ' %']
+  ].map(([l, v]) => `<div><dt>${l}</dt><dd>${v}</dd></div>`).join('');
+  KEYS.forEach(j => buildTube(j, j === k ? 8 : 4.5));
+  wpMarks.forEach(m => scene.remove(m)); wpMarks = [];
+  $('labels').innerHTML = ''; labels = [];
+  r.wpts.forEach(w => {
+    const [x, z] = toXZ(w.lon, w.lat), y = heightAt(x, z) + LIFT;
+    const m = ball(w.name.startsWith('Inicio') ? 0x2f9e44 : 0xe03131, 14); m.position.set(x, y + 4, z); m.renderOrder = 3;
+    scene.add(m); wpMarks.push(m);
+    const el = document.createElement('div'); el.className = 'lbl';
+    el.textContent = (w.name.startsWith('Inicio') ? 'Salida' : w.name.startsWith('Cumbre') ? 'Cumbre' : w.name.split(' (')[0]) + ' · ' + Math.round(w.ele) + ' m';
+    $('labels').appendChild(el); labels.push({ el, v: new THREE.Vector3(x, y + 4, z) });
+  });
+  drawProfile();
+}
+
+const _p = new THREE.Vector3();
+function placeLabels() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  for (const { el, v } of labels) {
+    _p.copy(v).project(camera);
+    const vis = _p.z < 1 && Math.abs(_p.x) < 1.05 && Math.abs(_p.y) < 1.05;
+    el.style.display = vis ? '' : 'none';
+    if (vis) el.style.transform = `translate(${(_p.x * .5 + .5) * w}px, ${(-_p.y * .5 + .5) * h}px) translate(-50%, -140%)`;
+  }
+}
+
+/* ---------- perfil de elevación ---------- */
+const prof = $('prof'), tip = $('tip'), box = $('svgbox');
+const M = { l: 44, r: 16, t: 14, b: 22 };
+let P = null;
+function drawProfile() {
+  const w = box.clientWidth, h = box.clientHeight;
+  if (!w || !h) return;
+  const all = Object.values(ROUTES), KM = Math.max(...all.map(r => r.total));
+  const zs = all.flatMap(r => r.pts.map(p => p[2]));
+  const zmin = Math.floor(Math.min(...zs) / 100) * 100, zmax = Math.ceil(Math.max(...zs) / 100) * 100;
+  const x = d => M.l + d / KM * (w - M.l - M.r), y = z => M.t + (1 - (z - zmin) / (zmax - zmin)) * (h - M.t - M.b);
+  const line = r => r.pts.map((p, i) => `${i ? 'L' : 'M'}${x(r.dist[i]).toFixed(1)},${y(p[2]).toFixed(1)}`).join('');
+  let g = '';
+  for (let z = zmin; z <= zmax; z += 100) g += `<line x1="${M.l}" x2="${w - M.r}" y1="${y(z)}" y2="${y(z)}" stroke="var(--line)"/><text class="ax" x="${M.l - 6}" y="${y(z) + 3}" text-anchor="end">${z}</text>`;
+  for (let d = 0; d <= KM; d += 1) g += `<text class="ax" x="${x(d)}" y="${h - 6}" text-anchor="middle">${d} km</text>`;
+  const order = KEYS.filter(k => k !== cur).concat(cur);
+  const paths = order.map(k => {
+    const r = ROUTES[k], on = k === cur, c = `var(--r${k})`;
+    return (on ? `<path d="${line(r)}L${x(r.total)},${y(zmin)}L${x(0)},${y(zmin)}Z" fill="${c}" opacity=".18"/>` : '') +
+      `<path d="${line(r)}" fill="none" stroke="${c}" stroke-width="${on ? 2.5 : 1.5}" opacity="${on ? 1 : .55}" stroke-linejoin="round"/>`;
+  }).join('');
+  box.innerHTML = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Perfil de elevación de las tres rutas">${g}${paths}
+    <line id="cl" y1="${M.t}" y2="${h - M.b}" stroke="var(--fg)" stroke-dasharray="3 3" style="display:none"/>
+    <circle id="cc" r="5" fill="var(--panel)" stroke="var(--r${cur})" stroke-width="3" style="display:none"/></svg>`;
+  P = { x, y, KM, w };
+}
+function at(d) {
+  const r = ROUTES[cur]; let i = 1;
+  while (i < r.dist.length - 1 && r.dist[i] < d) i++;
+  const t = (d - r.dist[i - 1]) / ((r.dist[i] - r.dist[i - 1]) || 1), a = r.pts[i - 1], b = r.pts[i];
+  const v = r.v3[i - 1].clone().lerp(r.v3[i], t);
+  return { v, ele: a[2] + (b[2] - a[2]) * t, slope: (b[2] - a[2]) / (((r.dist[i] - r.dist[i - 1]) * 1000) || 1) * 100 };
+}
+function showAt(d) {
+  const p = at(d), x = P.x(d);
+  const cl = $('cl'), cc = $('cc');
+  if (cl) { cl.setAttribute('x1', x); cl.setAttribute('x2', x); cl.style.display = ''; }
+  if (cc) { cc.setAttribute('cx', x); cc.setAttribute('cy', P.y(p.ele)); cc.style.display = ''; }
+  hoverMk.position.copy(p.v).y += 6; hoverMk.visible = true;
+  hoverMk.material.color.set(routeColor(cur));
+  tip.style.display = 'block'; tip.style.left = Math.min(Math.max(x, 70), P.w - 70) + 'px';
+  tip.textContent = `${d.toFixed(2).replace('.', ',')} km · ${Math.round(p.ele)} m · ${Math.round(p.slope)} %`;
+}
+function hideAt() {
+  tip.style.display = 'none'; hoverMk.visible = false;
+  ['cl', 'cc'].forEach(id => { const e = $(id); if (e) e.style.display = 'none'; });
+}
+function onMove(e) {
+  if (flying || !P) return;
+  const rect = box.getBoundingClientRect(), d = (e.clientX - rect.left - M.l) / (P.w - M.l - M.r) * P.KM;
+  if (d >= 0 && d <= ROUTES[cur].total) showAt(d); else hideAt();
+}
+box.addEventListener('pointermove', onMove);
+box.addEventListener('pointerdown', onMove);
+box.addEventListener('pointerleave', () => { if (!flying) hideAt(); });
+
+/* ---------- sobrevuelo ---------- */
+let flying = null;
+const flyBtn = $('fly');
+function stopFly() { flying = null; flyBtn.textContent = 'Sobrevuelo'; hideAt(); controls.enabled = true; }
+flyBtn.addEventListener('click', () => {
+  if (flying) return stopFly();
+  twn = null; controls.enabled = false; flyBtn.textContent = 'Parar';
+  flying = { s: performance.now(), dur: 45000, cam: camera.position.clone(), look: controls.target.clone() };
+});
+canvas.addEventListener('pointerdown', () => { if (flying) stopFly(); });
+function stepFly(now) {
+  const f = Math.min((now - flying.s) / flying.dur, 1), r = ROUTES[cur], d = f * r.total;
+  const p = at(d), q = at(Math.min(d + 0.35, r.total)), back = at(Math.max(d - 0.3, 0));
+  const dir = q.v.clone().sub(back.v).setY(0).normalize();
+  const want = p.v.clone().addScaledVector(dir, -380);
+  want.y = Math.max(heightAt(want.x, want.z) + 120, p.v.y + 170);
+  flying.cam.lerp(want, 0.04); flying.look.lerp(q.v, 0.06);
+  camera.position.copy(flying.cam); camera.lookAt(flying.look);
+  controls.target.copy(flying.look);
+  showAt(d);
+  if (f >= 1) stopFly();
+}
+
+$('frame').addEventListener('click', () => { stopFly(); frameAll(true); });
+
+/* ---------- tema ---------- */
+function applyTheme() {
+  skirtMat.color.set(css('--skirt'));
+  KEYS.forEach(k => ROUTES[k].mat.color.set(routeColor(k)));
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+/* ---------- arranque ---------- */
+resize(); frameAll(false); applyTheme(); select('A'); drawProfile();
+(function loop(now) {
+  requestAnimationFrame(loop);
+  if (twn) {
+    const t = Math.min((now - twn.s) / twn.ms, 1), e = t * t * (3 - 2 * t);
+    camera.position.lerpVectors(twn.p0, twn.p, e); controls.target.lerpVectors(twn.t0, twn.t, e);
+    if (t >= 1) twn = null;
+  }
+  if (flying) stepFly(now); else controls.update();
+  renderer.render(scene, camera);
+  placeLabels();
+})(performance.now());
+</script>
