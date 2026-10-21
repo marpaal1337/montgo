@@ -1,0 +1,223 @@
+<title>Subida al Montgó</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Layout: una columna de lectura de 860px; hero con datos clave, avisos, comparativa con perfil y mapa, una ficha por ruta, horario y material. */
+:root {
+  --bg: #eef1ee; --surface: #fafbfa; --fg: #17201c; --muted: #55625b; --line: #d3dad5;
+  --pine: #1d5c47; --warn-bg: #fdf0d9; --warn-line: #e0b25c; --warn-fg: #4a3407;
+  --ra: #c9490f; --rc: #2455c9; --rb: #0f7a5a; --on-route: #ffffff;
+  --display: "Bricolage Grotesque", "Arial Narrow", Arial, sans-serif;
+  --body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121815; --surface: #1a221e; --fg: #e8eeea; --muted: #9fada5; --line: #2f3b35;
+  --pine: #6fd1ac; --warn-bg: #2d2413; --warn-line: #7a5f22; --warn-fg: #f1d9a0;
+  --ra: #ff8c52; --rc: #8aa9ff; --rb: #45d3a2; --on-route: #101512; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #121815; --surface: #1a221e; --fg: #e8eeea; --muted: #9fada5; --line: #2f3b35;
+  --pine: #6fd1ac; --warn-bg: #2d2413; --warn-line: #7a5f22; --warn-fg: #f1d9a0;
+  --ra: #ff8c52; --rc: #8aa9ff; --rb: #45d3a2; --on-route: #101512; color-scheme: dark; }
+
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; }
+.wrap { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.7rem; font-weight: 700; margin-bottom: 14px; }
+h3 { font-size: 1.25rem; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--pine); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--rc); outline-offset: 2px; }
+.eyebrow { font-family: var(--mono); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* hero */
+.hero { display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }
+.hero h1 { font-size: clamp(2.6rem, 9vw, 4.6rem); font-weight: 700; letter-spacing: -.02em; }
+.lede { font-size: 1.2rem; max-width: 46ch; color: var(--muted); }
+.keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0; margin-top: 10px; border-block: 2px solid var(--fg); }
+.keys > div { padding: 14px 16px 14px 0; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.keys > div + div { border-left: 1px solid var(--line); padding-left: 16px; }
+.keys b { font-family: var(--display); font-size: 1.9rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.keys span { color: var(--muted); font-size: .95rem; }
+@media (max-width: 640px) { .keys > div + div { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; } }
+
+/* avisos */
+.warn { background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--warn-fg); border-radius: 6px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+.warn h2 { font-size: 1.25rem; margin: 0; }
+.warn ul { margin: 0; padding-left: 1.15em; display: flex; flex-direction: column; gap: 8px; }
+.warn a { color: inherit; }
+
+/* comparativa */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+thead th { font-family: var(--mono); font-weight: 500; font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--fg); }
+tbody th { width: 52px; }
+.badge { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; font-family: var(--display); font-weight: 700; color: var(--on-route); flex: none; }
+.b-A { background: var(--ra); } .b-B { background: var(--rb); } .b-C { background: var(--rc); }
+.fine { font-size: .9rem; color: var(--muted); margin-top: 10px; max-width: 70ch; }
+.figs { display: flex; flex-direction: column; gap: 26px; margin-top: 26px; }
+figure { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+figcaption { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+.chart { width: 100%; min-width: 560px; height: auto; display: block; }
+.grid { stroke: var(--line); stroke-width: 1; }
+.tick { fill: var(--muted); font: 400 13px var(--mono); }
+.lbl { fill: var(--fg); font: 700 15px var(--display); }
+.line { fill: none; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.line-A { stroke: var(--ra); } .line-B { stroke: var(--rb); } .line-C { stroke: var(--rc); }
+.dot { stroke: var(--surface); stroke-width: 2; }
+.dot-A { fill: var(--ra); } .dot-B { fill: var(--rb); } .dot-C { fill: var(--rc); }
+.lbl-A { fill: var(--ra); } .lbl-B { fill: var(--rb); } .lbl-C { fill: var(--rc); }
+.fill-A { fill: var(--ra); opacity: .14; } .fill-B { fill: var(--rb); opacity: .14; } .fill-C { fill: var(--rc); opacity: .14; }
+.peak { fill: var(--fg); } .north { fill: var(--muted); }
+
+/* fichas */
+.routes { display: flex; flex-direction: column; gap: 22px; }
+.route { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.route header { display: flex; gap: 14px; align-items: center; }
+.route .badge { width: 38px; height: 38px; font-size: 1.15rem; }
+.sub { color: var(--muted); font-size: .95rem; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 12px 16px; margin: 0; }
+.facts div { display: flex; flex-direction: column; gap: 0; }
+.facts dt { font-family: var(--mono); font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.facts dd { margin: 0; font-family: var(--display); font-size: 1.45rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.notes { margin: 0; padding-left: 1.15em; display: flex; flex-direction: column; gap: 4px; }
+.coord { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: .95rem; padding-top: 12px; border-top: 1px solid var(--line); }
+.coord span { color: var(--muted); }
+code { font-family: var(--mono); font-size: .88rem; user-select: all; }
+.copy { font: 600 .85rem var(--body); color: var(--fg); background: transparent; border: 1px solid var(--fg); border-radius: 4px; padding: 3px 10px; cursor: pointer; }
+.copy:hover { background: var(--fg); color: var(--bg); }
+.reco { display: inline-block; font-family: var(--mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; background: var(--fg); color: var(--bg); padding: 2px 8px; border-radius: 3px; margin-left: 8px; vertical-align: middle; }
+
+/* horario */
+.timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.timeline li { display: grid; grid-template-columns: 64px 1fr; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.timeline time { font-family: var(--mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.timeline .hit { font-weight: 600; }
+.alt { margin-top: 14px; display: flex; flex-direction: column; gap: 4px; }
+
+/* material */
+.check { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 6px 24px; }
+.check label { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; cursor: pointer; }
+.check input { width: 20px; height: 20px; margin-top: 3px; accent-color: var(--pine); flex: none; }
+.check input:checked + span { color: var(--muted); text-decoration: line-through; }
+.src { margin: 0; padding-left: 1.15em; display: flex; flex-direction: column; gap: 4px; }
+</style>
+
+<main class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Domingo 25 de octubre de 2026 · 5 personas · desde Valencia</p>
+    <h1>Subida al Montgó</h1>
+    <p class="lede">Tres formas de llegar a la cima (752 m), con perfil, horario y lo que hay que llevar. Mi recomendación es la ruta A.</p>
+    <div class="keys">
+      <div><b>07:00</b><span>Salida de Valencia, unos 1h15 por la AP‑7</span></div>
+      <div><b>752 m</b><span>Cima del Montgó, junto a la base de la cruz</span></div>
+      <div><b>17:00</b><span>Hora límite para estar abajo, anochece sobre las 18:15</span></div>
+    </div>
+  </header>
+
+  <section class="warn" aria-labelledby="avisos">
+    <h2 id="avisos">Antes de salir</h2>
+    <ul>
+      <li><b>Cambia la hora esa noche.</b> A las 03:00 del domingo vuelven a ser las 02:00. Los móviles se ajustan solos, pero el reloj de la cocina no.</li>
+      <li><b>Temporal reciente.</b> El 18 y 19 de octubre hubo alerta roja en la Marina Alta. Puede haber tramos de sendero dañados y piedra suelta.</li>
+      <li><b>Posible cierre por riesgo de incendio.</b> Con riesgo extremo se prohíbe pisar los senderos del Parque. Hay que confirmarlo el sábado: <code>parque_montgo@gva.es</code> o <code>966 427 155</code>.</li>
+      <li><b>El tiempo.</b> AEMET solo llega al sábado 24: 15 a 22 °C, 0 a 10 % de lluvia en Dénia. La previsión del domingo se mira el sábado por la tarde. Si llueve, se aplaza: la piedra mojada resbala mucho.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="comparar">
+    <h2 id="comparar">Las tres rutas</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th></th><th>Distancia</th><th>Desnivel</th><th>Subida</th><th>Bajada</th><th>En una frase</th></tr></thead>
+        <tbody>{{ROWS}}</tbody>
+      </table>
+    </div>
+    <p class="fine">Los tiempos son para un grupo de cinco con paradas cortas: Naismith (5 km/h más 1 h por cada 600 m de subida) más un 25 % de margen. Todas son de ida y vuelta por el mismo camino.</p>
+    <div class="figs">
+      <figure>
+        <figcaption>Perfil de elevación, las tres rutas sobre el mismo eje</figcaption>
+        <div class="scroll">{{PROFILE_ALL}}</div>
+      </figure>
+      <figure>
+        <figcaption>Vista de planta: dónde sale cada ruta</figcaption>
+        <div class="scroll">{{MAP}}</div>
+      </figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="fichas">
+    <h2 id="fichas">Ficha de cada ruta</h2>
+    <div class="routes">{{CARDS}}</div>
+  </section>
+
+  <section aria-labelledby="horario">
+    <h2 id="horario">Horario con la ruta A</h2>
+    <ol class="timeline">
+      <li><time>07:00</time><span>Salida de Valencia. Con dos coches, uno de cada tres o dos personas.</span></li>
+      <li><time>08:15</time><span>Llegada al campo de tiro de Les Planes. Agua, calzado y fotos de grupo.</span></li>
+      <li><time>08:30</time><span>Empieza la subida.</span></li>
+      <li><time class="hit">10:30</time><span class="hit">Cima. Comer, abrigarse y mirar el mar.</span></li>
+      <li><time>11:15</time><span>Empieza la bajada, más despacio por la cresta y la piedra suelta.</span></li>
+      <li><time>12:30</time><span>De vuelta en los coches. Comida por la zona antes de volver.</span></li>
+      <li><time>17:00</time><span>Margen de seguridad: a esta hora ya tendría que estar todo el grupo abajo.</span></li>
+    </ol>
+    <p class="fine alt"><span><b>Si elegís la C:</b> cima hacia las 11:40 y de vuelta en los coches sobre las 13:45.</span><span><b>Si elegís la B:</b> cima hacia las 12:15 y de vuelta en los coches sobre las 15:00.</span></p>
+  </section>
+
+  <section aria-labelledby="material">
+    <h2 id="material">Qué llevar</h2>
+    <ul class="check" id="checklist">
+      <li><label><input type="checkbox" id="c1"><span>2 a 3 litros de agua por persona. No hay fuentes en la ruta</span></label></li>
+      <li><label><input type="checkbox" id="c2"><span>Calzado de montaña con suela de agarre</span></label></li>
+      <li><label><input type="checkbox" id="c3"><span>Cortavientos y una capa de abrigo para la cima</span></label></li>
+      <li><label><input type="checkbox" id="c4"><span>Gorra, gafas de sol y crema</span></label></li>
+      <li><label><input type="checkbox" id="c5"><span>Comida para el día y algo de fruta seca</span></label></li>
+      <li><label><input type="checkbox" id="c6"><span>Frontal, por si se alarga la bajada</span></label></li>
+      <li><label><input type="checkbox" id="c7"><span>Móvil con el GPX ya descargado y batería externa</span></label></li>
+      <li><label><input type="checkbox" id="c8"><span>Botiquín básico y manta térmica</span></label></li>
+      <li><label><input type="checkbox" id="c9"><span>Bolsa para llevarse la basura</span></label></li>
+      <li><label><input type="checkbox" id="c10"><span>Guantes finos, útiles para agarrarse en la cresta</span></label></li>
+    </ul>
+    <p class="fine">En caso de accidente, llamad al <b>112</b>. Los tracks GPX los pasamos por el grupo, esta página no permite descargarlos.</p>
+  </section>
+
+  <section aria-labelledby="tracks">
+    <h2 id="tracks">Sobre los tracks</h2>
+    <p>Las rutas están calculadas sobre los senderos de OpenStreetMap y un modelo de elevación de 25 m. No son grabaciones de GPS, así que sirven para planificar. Antes de salir conviene contrastarlas con Wikiloc o Komoot.</p>
+    <ul class="src" style="margin-top:12px">
+      <li>La ruta A sale unos 0,5 km más corta que los 3,87 km que publica <a href="https://en.javea.com/ruta-campo-tiro-cima-montgo/" target="_blank" rel="noopener">Xàbia.com</a>.</li>
+      <li>La circular clásica por el Barranc de l'Hedra (6,3 km, +746 m, unas 3h45) no está conectada en OpenStreetMap y no la he podido calcular. Su track está en <a href="https://www.wikiloc.com/hiking-trails/montgo-desde-jesus-pobre-49391841" target="_blank" rel="noopener">Wikiloc</a> y pide una cuenta.</li>
+      <li>El modelo de elevación rebaja la cima a unos 735 m. En los datos, el punto de cima vale 752 m.</li>
+      <li>Información de la ruta Jesús Pobre en <a href="https://en.javea.com/ruta-jesus-pobre-cima-montgo/" target="_blank" rel="noopener">Xàbia.com</a>. Previsión en <a href="https://www.aemet.es/ca/eltiempo/widgets/municipios/denia-id03063" target="_blank" rel="noopener">AEMET</a>.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+document.querySelectorAll(".copy").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var t = b.getAttribute("data-copy"), code = b.parentNode.querySelector("code");
+    var done = function () { b.textContent = "Copiado"; setTimeout(function () { b.textContent = "Copiar"; }, 1600); };
+    var fallback = function () {
+      var r = document.createRange(); r.selectNodeContents(code);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Selecciona y copia";
+    };
+    try { navigator.clipboard.writeText(t).then(done, fallback); } catch (e) { fallback(); }
+  });
+});
+(function () {
+  var boxes = document.querySelectorAll("#checklist input");
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem("montgo-check") || "{}"); } catch (e) {}
+  boxes.forEach(function (c) {
+    c.checked = !!saved[c.id];
+    c.addEventListener("change", function () {
+      saved[c.id] = c.checked;
+      try { localStorage.setItem("montgo-check", JSON.stringify(saved)); } catch (e) {}
+    });
+  });
+})();
+</script>

@@ -1,0 +1,38 @@
+{
+ "A": {
+  "name": "A \u00b7 Directa desde campo de tiro (Les Planes, PR-CV 355)",
+  "km": 3.351081123385613,
+  "up": 525.8541805052654,
+  "dn": 11.631125710227309,
+  "zmin": 211.853151957194,
+  "zmax": 727.8689575195312,
+  "t_up": 1.546639858852565,
+  "t_dn": 0.54547788030988,
+  "maxslope": 58.16746567234835,
+  "file": "ruta_A_campo_tiro_Les_Planes"
+ },
+ "C": {
+  "name": "C \u00b7 Cam\u00ed de la Col\u00f2nia (D\u00e9nia, ruta naranja)",
+  "km": 5.842160544970982,
+  "up": 820.7682708393446,
+  "dn": 139.62883411754262,
+  "zmin": 52.19718233744303,
+  "zmax": 733.3366190592448,
+  "t_up": 2.536379227059771,
+  "t_dn": 1.0464487544893915,
+  "maxslope": 71.98552911931793,
+  "file": "ruta_C_Cami_de_la_Colonia"
+ },
+ "B": {
+  "name": "B \u00b7 Larga desde Jes\u00fas Pobre por GR-330 / Creueta de D\u00e9nia",
+  "km": 8.878865268972179,
+  "up": 741.7236293445933,
+  "dn": 134.3867610584605,
+  "zmin": 74.12866557728161,
+  "zmax": 733.5787963867188,
+  "t_up": 3.011979102702091,
+  "t_dn": 1.5281278518823171,
+  "maxslope": 55.646806196732925,
+  "file": "ruta_B_larga_Jesus_Pobre_GR330"
+ }
+}

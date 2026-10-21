@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+
+# Volcado grande de OSM (regenerable con scripts/fetch_osm.py)
+data/osm.json
