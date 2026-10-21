@@ -45,6 +45,12 @@
            border-radius: 10px; padding: 12px 14px 14px; box-shadow: 0 6px 24px #0003; }
   h1 { font: 700 26px/1 var(--display); letter-spacing: .02em; margin: 0; text-transform: uppercase; }
   .sub { color: var(--mut); font-size: 12px; margin: 3px 0 10px; }
+  .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .more-btn { display: none; appearance: none; background: transparent; border: 1px solid var(--line); color: var(--fg); border-radius: 6px; padding: 3px 9px; font: 600 12px var(--body); cursor: pointer; }
+  .more-btn::after { content: ' ▴'; }
+  #panel.compact .more-btn::after { content: ' ▾'; }
+  .more-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #panel.compact #more { display: none; }
   .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .tab { appearance: none; cursor: pointer; text-align: left; padding: 6px 8px 7px; border-radius: 7px; color: var(--fg);
          background: transparent; border: 1px solid var(--line); border-top: 4px solid var(--c); font: inherit; min-width: 0; }
@@ -62,6 +68,18 @@
          background: transparent; color: var(--fg); }
   .btn.main { background: var(--accent); border-color: var(--accent); color: var(--panel); }
 
+  .grp { margin: 0 0 12px; }
+  .glabel { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: var(--mut); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+  .glabel output { font: 500 12px var(--mono); color: var(--fg); text-transform: none; letter-spacing: 0; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+  .seg button { appearance: none; border: 0; background: transparent; color: var(--fg); padding: 6px 0; font: 600 13px var(--body); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
+  .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  #legend { margin-top: 7px; }
+  #legend i { display: block; height: 8px; border-radius: 4px; }
+  #legend div { display: flex; justify-content: space-between; font: 500 10px var(--mono); color: var(--mut); margin-top: 2px; }
+  input[type=range] { width: 100%; margin: 0; accent-color: var(--accent); }
+  #sunnfo { font-size: 11px; color: var(--mut); margin-top: 3px; }
   .lbl { position: absolute; left: 0; top: 0; pointer-events: none; transform: translate(-50%, -140%); white-space: nowrap;
          background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 5px; padding: 2px 7px;
          font: 500 11px var(--mono); box-shadow: 0 2px 8px #0003; }
@@ -77,7 +95,9 @@
   #fail { position: absolute; inset: 0; display: none; place-items: center; padding: 24px; text-align: center; color: var(--mut); }
   @media (max-width: 520px) {
     #panel { padding: 10px 12px 12px; }
-    #name { display: none; }
+    .more-btn { display: block; }
+    .sub { margin-bottom: 8px; }
+    .tabs { margin-bottom: 10px; }
     #prof { height: 150px; }
   }
   @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
@@ -88,11 +108,26 @@
     <canvas id="gl"></canvas>
     <div id="labels"></div>
     <section id="panel" aria-label="Rutas del Montgó">
-      <h1>Montgó</h1>
+      <div class="head"><h1>Montgó</h1><button class="more-btn" id="moreBtn" type="button" aria-expanded="true" aria-controls="more">Detalles</button></div>
       <p class="sub">Domingo 25 de octubre · salida desde Valencia</p>
       <div class="tabs" id="tabs"></div>
+      <div id="more">
       <div id="name"></div>
       <dl class="stats" id="stats"></dl>
+      <div class="grp">
+        <div class="glabel"><span>Color del track</span></div>
+        <div class="seg" id="cmode">
+          <button type="button" data-m="route" aria-pressed="true">Ruta</button>
+          <button type="button" data-m="slope" aria-pressed="false">Pendiente</button>
+        </div>
+        <div id="legend" hidden><i id="lgbar"></i><div><span>0</span><span>20</span><span>40</span><span>60 %</span></div></div>
+      </div>
+      <div class="grp">
+        <div class="glabel"><label for="hour">Sol</label><output id="hourv" for="hour"></output></div>
+        <input type="range" id="hour" min="6" max="19.5" step="0.0833" value="10">
+        <div id="sunnfo"></div>
+      </div>
+      </div>
       <div class="actions">
         <button class="btn main" id="fly" type="button">Sobrevuelo</button>
         <button class="btn" id="frame" type="button">Ver todo</button>
@@ -110,7 +145,8 @@
 const ROUTES = /*ROUTES*/null;
 const TERRAIN = /*TERRAIN*/null;
 
-const KEYS = Object.keys(ROUTES);
+/*SHARED*/
+const KEYS = Object.keys(ROUTES).sort();
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const routeColor = k => css('--r' + k);
 const fmtH = h => Math.floor(h) + ' h ' + String(Math.round((h % 1) * 60)).padStart(2, '0');
@@ -140,12 +176,19 @@ try {
 } catch (e) { $('fail').style.display = 'grid'; throw e; }
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const lin = c => new THREE.Color(c).convertSRGBToLinear();
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, 1, 20, 60000);
-scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-const sun = new THREE.DirectionalLight(0xffffff, 0.45);
-sun.position.set(-3000, 4000, -2000);
-scene.add(sun);
+const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambient);
+const sun = new THREE.DirectionalLight(0xffffff, 0.7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(innerWidth < 700 ? 2048 : 4096, innerWidth < 700 ? 2048 : 4096);
+Object.assign(sun.shadow.camera, { left: -5200, right: 5200, top: 5200, bottom: -5200, near: 100, far: 22000 });
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 3;
+scene.add(sun, sun.target);
 
 const geo = new THREE.PlaneGeometry(W, D, COLS - 1, ROWS - 1);
 geo.rotateX(-Math.PI / 2);
@@ -155,7 +198,9 @@ geo.computeVertexNormals();
 const tex = new THREE.TextureLoader().load(TERRAIN.tex, () => { });
 tex.encoding = THREE.sRGBEncoding;
 tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-scene.add(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map: tex })));
+const terrain = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map: tex }));
+terrain.castShadow = terrain.receiveShadow = true;
+scene.add(terrain);
 
 const skirtMat = new THREE.MeshLambertMaterial({ color: 0x555555, side: THREE.DoubleSide });
 function skirt(edge) {
@@ -181,19 +226,25 @@ for (const k of KEYS) {
   r.v3 = r.pts.map(([lon, lat]) => { const [x, z] = toXZ(lon, lat); return new THREE.Vector3(x, heightAt(x, z) + LIFT, z); });
   r.total = r.dist[r.dist.length - 1];
   r.curve = new THREE.CatmullRomCurve3(r.v3, false, 'centripetal');
-  r.mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  r.mat = new THREE.MeshBasicMaterial({ vertexColors: true });
   r.mesh = null;
 }
 function buildTube(k, radius) {
   const r = ROUTES[k];
   if (r.mesh) { scene.remove(r.mesh); r.mesh.geometry.dispose(); }
-  r.mat.color.set(routeColor(k));
-  r.mesh = new THREE.Mesh(new THREE.TubeGeometry(r.curve, r.v3.length, radius, 6, false), r.mat);
+  const tg = new THREE.TubeGeometry(r.curve, r.v3.length, radius, 6, false), per = 7, n = r.v3.length;
+  const colors = new Float32Array(tg.attributes.position.count * 3), base = lin(routeColor(k)), c = new THREE.Color();
+  for (let i = 0; i <= n; i++) {
+    if (cmode === 'slope' && k === cur) c.set(slopeHex(slopeAtDist(r, i / n * r.total))).convertSRGBToLinear(); else c.copy(base);
+    for (let j = 0; j < per; j++) c.toArray(colors, (i * per + j) * 3);
+  }
+  tg.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  r.mesh = new THREE.Mesh(tg, r.mat);
   r.mesh.renderOrder = k === cur ? 2 : 1;
   scene.add(r.mesh);
 }
 
-const ball = (color, rad) => new THREE.Mesh(new THREE.SphereGeometry(rad, 16, 12), new THREE.MeshBasicMaterial({ color }));
+const ball = (color, rad) => new THREE.Mesh(new THREE.SphereGeometry(rad, 16, 12), new THREE.MeshBasicMaterial({ color: lin(color) }));
 const hoverMk = ball(0xffffff, 16); hoverMk.visible = false; hoverMk.renderOrder = 3; scene.add(hoverMk);
 
 const controls = new THREE.OrbitControls(camera, canvas);
@@ -202,7 +253,8 @@ controls.maxPolarAngle = Math.PI * 0.47; controls.minDistance = 250; controls.ma
 controls.screenSpacePanning = false;
 
 function frameAll(animate) {
-  const to = { pos: new THREE.Vector3(-300, 4600, 6200), tgt: new THREE.Vector3(-300, 150, -250) };
+  const k = Math.max(1, 1.25 / camera.aspect);   // en vertical hay que alejar la cámara
+  const to = { pos: new THREE.Vector3(-300, 4600 * k, 6200 * k), tgt: new THREE.Vector3(-300, 150, -250) };
   if (!animate) { camera.position.copy(to.pos); controls.target.copy(to.tgt); controls.update(); return; }
   tween(to.pos, to.tgt, 1200);
 }
@@ -220,6 +272,11 @@ new ResizeObserver(() => { resize(); drawProfile(); }).observe(stage);
 /* ---------- selección, panel, etiquetas ---------- */
 let cur = 'A', labels = [], wpMarks = [];
 $('tabs').innerHTML = KEYS.map(k => `<button class="tab" type="button" data-k="${k}" style="--c:var(--r${k})" aria-pressed="false"><b>Ruta ${k}</b><span>${String(ROUTES[k].km).replace('.', ',')} km</span></button>`).join('');
+$('moreBtn').addEventListener('click', () => {
+  const c = $('panel').classList.toggle('compact');
+  $('moreBtn').setAttribute('aria-expanded', !c);
+});
+if (matchMedia('(max-width: 520px)').matches) { $('panel').classList.add('compact'); $('moreBtn').setAttribute('aria-expanded', 'false'); }
 $('tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) select(b.dataset.k); });
 
 function select(k) {
@@ -295,7 +352,7 @@ function showAt(d) {
   if (cl) { cl.setAttribute('x1', x); cl.setAttribute('x2', x); cl.style.display = ''; }
   if (cc) { cc.setAttribute('cx', x); cc.setAttribute('cy', P.y(p.ele)); cc.style.display = ''; }
   hoverMk.position.copy(p.v).y += 6; hoverMk.visible = true;
-  hoverMk.material.color.set(routeColor(cur));
+  hoverMk.material.color.copy(lin(routeColor(cur)));
   tip.style.display = 'block'; tip.style.left = Math.min(Math.max(x, 70), P.w - 70) + 'px';
   tip.textContent = `${d.toFixed(2).replace('.', ',')} km · ${Math.round(p.ele)} m · ${Math.round(p.slope)} %`;
 }
@@ -337,16 +394,42 @@ function stepFly(now) {
 
 $('frame').addEventListener('click', () => { stopFly(); frameAll(true); });
 
+/* ---------- color del track y sol ---------- */
+let cmode = 'route';
+$('lgbar').style.background = LEGEND_CSS;
+$('cmode').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  cmode = b.dataset.m;
+  $('legend').hidden = cmode !== 'slope';
+  document.querySelectorAll('#cmode button').forEach(x => x.setAttribute('aria-pressed', x.dataset.m === cmode));
+  KEYS.forEach(j => buildTube(j, j === cur ? 8 : 4.5));
+});
+const SKY = { night: ['#070b14', '#18222e'], dusk: ['#2b3d66', '#f0a574'] };
+const mixHex = (a, b, t) => { const A = new THREE.Color(a), B = new THREE.Color(b); return '#' + A.lerp(B, t).getHexString(); };
+function setSun(h) {
+  const s = sunPos(h), k = Math.min(Math.max((s.el + 3) / 10, 0), 1), e = Math.max(s.el, 0.8) * RAD;
+  $('hourv').textContent = fmtClock(h); $('sunnfo').textContent = sunInfo(h);
+  const dir = new THREE.Vector3(Math.sin(s.az * RAD) * Math.cos(e), Math.sin(e), -Math.cos(s.az * RAD) * Math.cos(e));
+  sun.position.copy(dir.multiplyScalar(9000)); sun.intensity = 0.8 * k; sun.castShadow = k > 0.05;
+  ambient.intensity = 0.28 + 0.34 * k;
+  const day = [css('--sky-top'), css('--sky-bot')];
+  const stops = s.el < -6 ? SKY.night : s.el < 4 ? SKY.night.map((c, i) => mixHex(c, SKY.dusk[i], (s.el + 6) / 10)) :
+                s.el < 15 ? SKY.dusk.map((c, i) => mixHex(c, day[i], (s.el - 4) / 11)) : day;
+  stage.style.background = `linear-gradient(${stops[0]}, ${stops[1]})`;
+}
+$('hour').addEventListener('input', e => setSun(+e.target.value));
+
 /* ---------- tema ---------- */
 function applyTheme() {
-  skirtMat.color.set(css('--skirt'));
-  KEYS.forEach(k => ROUTES[k].mat.color.set(routeColor(k)));
+  skirtMat.color.copy(lin(css('--skirt')));
+  KEYS.forEach(j => buildTube(j, j === cur ? 8 : 4.5));
+  setSun(+$('hour').value);
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 /* ---------- arranque ---------- */
-resize(); frameAll(false); applyTheme(); select('A'); drawProfile();
+resize(); frameAll(false); select('A'); applyTheme(); drawProfile();
 (function loop(now) {
   requestAnimationFrame(loop);
   if (twn) {
