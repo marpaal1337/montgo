@@ -117,8 +117,8 @@
       <div class="grp">
         <div class="glabel"><span>Color del track</span></div>
         <div class="seg" id="cmode">
-          <button type="button" data-m="route" aria-pressed="true">Ruta</button>
-          <button type="button" data-m="slope" aria-pressed="false">Pendiente</button>
+          <button type="button" data-m="route" aria-pressed="false">Ruta</button>
+          <button type="button" data-m="slope" aria-pressed="true">Pendiente</button>
         </div>
         <div id="legend" hidden><i id="lgbar"></i><div><span>0</span><span>20</span><span>40</span><span>60 %</span></div></div>
       </div>
@@ -453,8 +453,10 @@ function stepFly(now) {
 $('frame').addEventListener('click', () => { stopFly(); frameAll(true); });
 
 /* ---------- color del track y sol ---------- */
-let cmode = 'route';
+let cmode = 'slope';
 $('lgbar').style.background = LEGEND_CSS;
+$('legend').hidden = false;
+document.querySelectorAll('#cmode button').forEach(x => x.setAttribute('aria-pressed', x.dataset.m === cmode));
 $('cmode').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   cmode = b.dataset.m;

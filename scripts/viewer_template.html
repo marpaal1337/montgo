@@ -107,8 +107,8 @@
       <div class="grp">
         <div class="glabel"><span>Color del track</span></div>
         <div class="seg" id="cmode">
-          <button type="button" data-m="route" aria-pressed="true">Ruta</button>
-          <button type="button" data-m="slope" aria-pressed="false">Pendiente</button>
+          <button type="button" data-m="route" aria-pressed="false">Ruta</button>
+          <button type="button" data-m="slope" aria-pressed="true">Pendiente</button>
         </div>
         <div id="legend" hidden><i id="lgbar"></i><div><span>0</span><span>20</span><span>40</span><span>60 %</span></div></div>
       </div>
@@ -310,7 +310,7 @@ $('frame').addEventListener('click', () => { stopFly(); frameAll(1200); });
 
 
 $('lgbar').style.background = LEGEND_CSS;
-let cmode = 'route';
+let cmode = 'slope';
 $('cmode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { cmode = b.dataset.m; applyColor(); } });
 
 function applyColor() {
