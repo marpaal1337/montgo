@@ -115,11 +115,11 @@ input[type=range] { width: 100%; margin: 0; accent-color: var(--accent); }
 .recbar button[aria-pressed="true"]#locBtn { color: var(--accent); border-color: var(--accent); }
 .recbar #recBtn { background: var(--rT); border-color: var(--rT); color: #fff; }
 .recbar #recBtn.on { background: var(--fg); border-color: var(--fg); color: var(--panel); }
-#recInfo, #tracksBox, #backInfo { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 24px #0003; padding: 8px 10px; font-size: 13px; }
+#recInfo, #tracksBox, #backInfo, #routeInfo { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 24px #0003; padding: 8px 10px; font-size: 13px; }
 #backInfo { display: flex; gap: 10px; align-items: center; }
 #backInfo:not([hidden]) { display: flex; }
 #backInfo svg { flex: none; color: var(--accent); transition: transform .25s; }
-#backInfo.off { border-color: var(--rT); } #backInfo.off svg { color: var(--rT); }
+#backInfo.off, #routeInfo.off { border-color: var(--rT); } #routeInfo b { font: 700 15px var(--display); letter-spacing: .02em; } #routeInfo small { display: block; color: var(--mut); font-size: 11px; } #backInfo.off svg { color: var(--rT); }
 #backInfo b { font: 700 16px var(--display); letter-spacing: .02em; }
 #backInfo > div { flex: 1; min-width: 0; }
 #backInfo .rbtn { flex: none; }

@@ -152,6 +152,11 @@ function removeRoutes() {
   if (hoverMk) { hoverMk.remove(); hoverMk = null; }
 }
 
+// hora límite de salida para volver con luz: puesta de sol − subida − bajada − 30 min de margen (Naismith no cuenta paradas)
+function lastStart(r) {
+  const h = SUN_RISE_SET.set - r.t_up - r.t_dn - 0.5;
+  return h < SUN_RISE_SET.rise ? 'Sin luz' : fmtClock(h);
+}
 function select(k) {
   stopFly(); cur = k;
   const r = ROUTES[k];
@@ -159,7 +164,8 @@ function select(k) {
   $('name').textContent = r.name + (r.marked ? ' · ' + r.marked : '');
   $('stats').innerHTML = [
     ['Distancia', String(r.km).replace('.', ',') + ' km'], ['Desnivel', '+' + r.up + ' m'], ['Cima', P.ele + ' m'],
-    ['Subida', fmtH(r.t_up)], ['Bajada', fmtH(r.t_dn)], ['Dificultad', GRADES[r.diff]]
+    ['Subida', fmtH(r.t_up)], ['Bajada', fmtH(r.t_dn)], ['Dificultad', GRADES[r.diff]],
+    ['Puesta de sol', fmtClock(SUN_RISE_SET.set)], ['Salir antes de', lastStart(r)]
   ].map(([l, v]) => `<div><dt>${l}</dt><dd>${v}</dd></div>`).join('');
   KEYS.forEach(j => {
     const on = j === k;
@@ -403,3 +409,27 @@ fetch('data/peaks.json').then(r => r.json()).then(async d => {
   sunAt(...REGION); fitHome(0);
   if (/^#\/cima\//.test(location.hash)) route();
 }).catch(() => { $('listView').innerHTML = '<p style="padding:1rem">No se pudieron cargar los datos. Sirve la raíz del repositorio con un servidor local (<code>python -m http.server</code>) y abre <code>/web/</code>.</p>'; });
+
+/* ====================== sobre el terreno: posición real frente a la ruta y cima hecha automática ====================== */
+const NEAR_PEAK = 40, OFF_ROUTE = 50;   // m
+let offRoute = false;
+addEventListener('track:fix', e => {
+  const f = e.detail, el = $('routeInfo');
+  if (!f || f[4] > 50) { if (!f) { el.hidden = true; offRoute = false; } return; }
+  const hit = PEAKS.find(p => Track.hav(f, [p.lon, p.lat]) <= NEAR_PEAK);
+  if (hit && !doneSet().has(hit.id)) {
+    const s = doneSet(); s.add(hit.id); store('cims:done', [...s]);
+    if (P) syncDone();
+    renderList(); clusters?.refresh();
+    Track.say('★ ' + hit.name + ' marcada como hecha.', 10000);
+  }
+  if (!P || !KEYS.length) { el.hidden = true; offRoute = false; return; }
+  const r = ROUTES[cur], pr = Track.projectOnLine(f, r.pts);
+  if (pr.d > 600) { el.hidden = true; offRoute = false; return; }   // lejos de la ruta: no es relevante
+  const off = pr.d > OFF_ROUTE, km = n => n.toFixed(1).replace('.', ',');
+  el.hidden = false; el.classList.toggle('off', off);
+  el.innerHTML = off ? `<b>Fuera de la ruta ${cur}</b><small>A ${Math.round(pr.d)} m del trazado. Pulsa «Volver» si te has perdido.</small>`
+                     : `<b>En la ruta ${cur}</b><small>${km(pr.along / 1000)} de ${km(r.km)} km · a ${Math.round(pr.d)} m del trazado</small>`;
+  if (off && !offRoute && navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  offRoute = off;
+});

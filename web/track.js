@@ -58,7 +58,7 @@ const Track = (() => {
   const needWatch = () => rec || locating || back;
 
   const flush = () => { if (rec && unsaved) { unsaved = 0; tx('readwrite', s => s.put(rec)).catch(() => say('No se puede guardar en este navegador.')); } };
-  function say(t) { msg = t; renderInfo(); }
+  function say(t, ms) { msg = t; renderInfo(); if (ms) setTimeout(() => { if (msg === t) { msg = ''; renderInfo(); } }, ms); }
 
   /* ---------- mapa ---------- */
   const empty = { type: 'FeatureCollection', features: [] };
@@ -89,7 +89,7 @@ const Track = (() => {
   }
   function stopWatch() {
     if (watchId == null) return;
-    navigator.geolocation.clearWatch(watchId); watchId = null; last = null; setPos(null);
+    navigator.geolocation.clearWatch(watchId); watchId = null; last = null; setPos(null); dispatchEvent(new CustomEvent('track:fix', { detail: null }));
   }
   function onErr(e) {
     if (e.code === 1) { say('Permiso de ubicación denegado.'); if (rec) stop(); locating = false; $('locBtn').setAttribute('aria-pressed', 'false'); stopWatch(); }
@@ -97,7 +97,7 @@ const Track = (() => {
   }
   function onPos(pos) {
     const c = pos.coords, f = [c.longitude, c.latitude, c.altitude, pos.timestamp, Math.round(c.accuracy)];
-    last = f; setPos(f);
+    last = f; setPos(f); dispatchEvent(new CustomEvent('track:fix', { detail: f }));
     gpsHead = c.speed > 1 && c.heading != null ? c.heading : null;
     guide();
     if (centerNext) { centerNext = false; map.easeTo({ center: [f[0], f[1]], zoom: Math.max(map.getZoom(), 15), duration: 800 }); }
@@ -229,7 +229,8 @@ const Track = (() => {
           `<small>${wake ? 'Pantalla activa mientras grabas.' : 'Mantén la pantalla encendida para no perder el GPS.'}${last ? ' Precisión ±' + last[4] + ' m.' : ' Buscando GPS…'}</small>`;
     } else if (pending) {
       h = `Grabación sin cerrar (${fmtKm(pending.dist)}, ${when(pending.t0)}).<span class="rrow"><button type="button" class="rbtn" data-act="resume">Reanudar</button><button type="button" class="rbtn" data-act="finish">Terminar</button></span>`;
-    } else if (msg) h = esc(msg);
+    }
+    if (msg) h += rec || pending ? `<small>${esc(msg)}</small>` : esc(msg);
     el.hidden = !h; el.innerHTML = h;
   }
   function renderList() {
@@ -283,5 +284,5 @@ const Track = (() => {
     renderBtn();
   }
   init();
-  return { hav, bearing, cumul, projectOnLine, pointAt, raise };
+  return { hav, bearing, cumul, projectOnLine, pointAt, raise, say };
 })();
