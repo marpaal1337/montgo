@@ -28,6 +28,17 @@
         <div id="sunnfo"></div>
       </div>
     </section>
+    <section id="rec" aria-label="Grabar track">
+      <div class="recbar">
+        <button type="button" id="locBtn" aria-pressed="false" aria-label="Mi ubicación">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+        </button>
+        <button type="button" id="tracksBtn" aria-expanded="false" aria-controls="tracksBox">Tracks</button>
+        <button type="button" id="recBtn" aria-pressed="false">● Grabar</button>
+      </div>
+      <div id="recInfo" role="status" hidden></div>
+      <div id="tracksBox" hidden><ul id="tracksList"></ul></div>
+    </section>
     <aside id="side" aria-label="Cimas y rutas">
       <button type="button" id="sheetBtn" aria-expanded="true" aria-label="Plegar panel"><i></i></button>
 
@@ -89,5 +100,6 @@
 <script src="../scripts/shared.js"></script>
 <script src="clusters.js"></script>
 <script src="app.js"></script>
+<script src="track.js"></script>
 </body>
 </html>

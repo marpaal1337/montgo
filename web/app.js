@@ -135,6 +135,7 @@ function addRoutes() {
     map.addLayer({ id: 'case-' + k, type: 'line', source: 'trk-' + k, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#fff', 'line-width': 7 } });
     map.addLayer({ id: 'line-' + k, type: 'line', source: 'trk-' + k, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': routeColor(k), 'line-width': 4 } });
   });
+  if (typeof Track !== 'undefined') Track.raise();   // mi track y mi posición por encima de las rutas
 }
 function removeRoutes() {
   KEYS.forEach(k => {
