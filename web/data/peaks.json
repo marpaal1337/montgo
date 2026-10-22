@@ -1,0 +1,344 @@
+[
+ {
+  "id": "penyagolosa",
+  "name": "Penyagolosa",
+  "ele": 1815,
+  "lat": 40.22276,
+  "lon": -0.34974,
+  "prov": "Castelló",
+  "comarca": "Els Ports / l'Alcalatén",
+  "routes": [
+   {
+    "id": "A",
+    "name": "Desde Vistabella del Maestrat",
+    "km": 3.96,
+    "up": 477,
+    "t_up": 1.59,
+    "max_slope": 31,
+    "marked": "PR-CV 79",
+    "drive": {
+     "km": 154,
+     "min": 221
+    }
+   },
+   {
+    "id": "B",
+    "name": "Desde Xodos",
+    "km": 3.11,
+    "up": 336,
+    "t_up": 1.18,
+    "max_slope": 31,
+    "drive": {
+     "km": 151,
+     "min": 185
+    }
+   },
+   {
+    "id": "C",
+    "name": "Desde el Castell de Vilamalefa",
+    "km": 6.54,
+    "up": 834,
+    "t_up": 2.7,
+    "max_slope": 54,
+    "drive": {
+     "km": 120,
+     "min": 210
+    }
+   }
+  ]
+ },
+ {
+  "id": "aitana",
+  "name": "Aitana",
+  "ele": 1559,
+  "lat": 38.64956,
+  "lon": -0.26613,
+  "prov": "Alacant",
+  "comarca": "El Comtat / la Marina Baixa",
+  "routes": [
+   {
+    "id": "A",
+    "name": "Desde Benifato",
+    "km": 3.41,
+    "up": 495,
+    "t_up": 1.51,
+    "max_slope": 48,
+    "marked": "PR-CV 21",
+    "drive": {
+     "km": 134,
+     "min": 109
+    }
+   },
+   {
+    "id": "B",
+    "name": "Desde Benimantell",
+    "km": 8.14,
+    "up": 904,
+    "t_up": 3.13,
+    "max_slope": 48,
+    "marked": "PR-CV 21",
+    "drive": {
+     "km": 133,
+     "min": 104
+    }
+   },
+   {
+    "id": "C",
+    "name": "Desde Sella",
+    "km": 11.39,
+    "up": 1282,
+    "t_up": 4.41,
+    "max_slope": 59,
+    "drive": {
+     "km": 134,
+     "min": 107
+    }
+   }
+  ]
+ },
+ {
+  "id": "puig-campana",
+  "name": "Puig Campana",
+  "ele": 1408,
+  "lat": 38.59722,
+  "lon": -0.19307,
+  "prov": "Alacant",
+  "comarca": "la Marina Baixa",
+  "routes": [
+   {
+    "id": "A",
+    "name": "Desde la Nucia",
+    "km": 5.68,
+    "up": 884,
+    "t_up": 2.61,
+    "max_slope": 46,
+    "marked": "PR-CV 17 + PR-CV 289.1",
+    "drive": {
+     "km": 147,
+     "min": 117
+    }
+   },
+   {
+    "id": "B",
+    "name": "Desde Finestrat",
+    "km": 3.96,
+    "up": 992,
+    "t_up": 2.45,
+    "max_slope": 74,
+    "marked": "PR-CV 289 + PR-CV 289.1",
+    "drive": {
+     "km": 149,
+     "min": 107
+    }
+   },
+   {
+    "id": "C",
+    "name": "Desde Polop",
+    "km": 7.58,
+    "up": 926,
+    "t_up": 3.06,
+    "max_slope": 46,
+    "marked": "PR-CV 13 + PR-CV 17",
+    "drive": {
+     "km": 145,
+     "min": 115
+    }
+   }
+  ]
+ },
+ {
+  "id": "cabezo-dor",
+  "name": "Cabeçó d'Or",
+  "ele": 1210,
+  "lat": 38.52775,
+  "lon": -0.39529,
+  "prov": "Alacant",
+  "comarca": "l'Alacantí",
+  "routes": [
+   {
+    "id": "A",
+    "name": "Desde Aigües (398 m)",
+    "km": 5.98,
+    "up": 795,
+    "t_up": 2.52,
+    "max_slope": 47,
+    "drive": {
+     "km": 177,
+     "min": 123
+    }
+   },
+   {
+    "id": "B",
+    "name": "Desde Busot",
+    "km": 4.64,
+    "up": 685,
+    "t_up": 2.07,
+    "max_slope": 38,
+    "marked": "PR-CV 2",
+    "drive": {
+     "km": 147,
+     "min": 114
+    }
+   },
+   {
+    "id": "C",
+    "name": "Desde Aigües (339 m)",
+    "km": 5.84,
+    "up": 843,
+    "t_up": 2.57,
+    "max_slope": 47,
+    "drive": {
+     "km": 175,
+     "min": 119
+    }
+   }
+  ]
+ },
+ {
+  "id": "bernia",
+  "name": "Bèrnia",
+  "ele": 1126,
+  "lat": 38.66349,
+  "lon": -0.05499,
+  "prov": "Alacant",
+  "comarca": "la Marina Baixa",
+  "routes": [
+   {
+    "id": "A",
+    "name": "Desde l'Algar",
+    "km": 5.82,
+    "up": 966,
+    "t_up": 2.77,
+    "max_slope": 42,
+    "marked": "PR-CV 48",
+    "drive": {
+     "km": 141,
+     "min": 102
+    }
+   },
+   {
+    "id": "B",
+    "name": "Desde Altea la Vella",
+    "km": 6.2,
+    "up": 967,
+    "t_up": 2.85,
+    "max_slope": 42,
+    "drive": {
+     "km": 130,
+     "min": 90
+    }
+   },
+   {
+    "id": "C",
+    "name": "Desde Pinos",
+    "km": 8.2,
+    "up": 830,
+    "t_up": 3.02,
+    "max_slope": 51,
+    "drive": {
+     "km": 121,
+     "min": 87
+    }
+   }
+  ]
+ },
+ {
+  "id": "monduver",
+  "name": "Mondúver",
+  "ele": 843,
+  "lat": 39.00909,
+  "lon": -0.26658,
+  "prov": "València",
+  "comarca": "la Safor / la Costera",
+  "routes": [
+   {
+    "id": "A",
+    "name": "Desde Gandia",
+    "km": 3.39,
+    "up": 543,
+    "t_up": 1.58,
+    "max_slope": 53,
+    "marked": "SL-CV 79",
+    "drive": {
+     "km": 77,
+     "min": 63
+    }
+   },
+   {
+    "id": "B",
+    "name": "Desde Xeraco",
+    "km": 4.7,
+    "up": 733,
+    "t_up": 2.16,
+    "max_slope": 50,
+    "marked": "PR-CV 153",
+    "drive": {
+     "km": 62,
+     "min": 65
+    }
+   },
+   {
+    "id": "C",
+    "name": "Desde la Puigmola",
+    "km": 5.91,
+    "up": 564,
+    "t_up": 2.12,
+    "max_slope": 43,
+    "marked": "PR-CV 153",
+    "drive": {
+     "km": 70,
+     "min": 63
+    }
+   }
+  ]
+ },
+ {
+  "id": "montgo",
+  "name": "Montgó",
+  "ele": 752,
+  "lat": 38.80323,
+  "lon": 0.12937,
+  "prov": "Alacant",
+  "comarca": "la Marina Alta",
+  "routes": [
+   {
+    "id": "A",
+    "name": "Directa desde el campo de tiro de Les Planes",
+    "km": 3.23,
+    "up": 535,
+    "t_up": 1.54,
+    "max_slope": 53,
+    "marked": "PR-CV 355",
+    "drive": {
+     "km": 115,
+     "min": 93
+    }
+   },
+   {
+    "id": "B",
+    "name": "Larga desde Jesús Pobre por GR-330 y Creueta de Dénia",
+    "km": 8.68,
+    "up": 743,
+    "t_up": 2.97,
+    "max_slope": 53,
+    "marked": "GR-330",
+    "drive": {
+     "km": 106,
+     "min": 76
+    }
+   },
+   {
+    "id": "C",
+    "name": "Camí de la Colònia desde Dénia",
+    "km": 5.71,
+    "up": 815,
+    "t_up": 2.5,
+    "max_slope": 68,
+    "drive": {
+     "km": 107,
+     "min": 80
+    }
+   }
+  ]
+ }
+]
