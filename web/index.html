@@ -22,7 +22,9 @@
         <div class="seg" id="base" role="group" aria-label="Mapa base">
           <button type="button" data-b="sat" aria-pressed="true">Satélite</button>
           <button type="button" data-b="topo" aria-pressed="false">Topográfico</button>
+          <button type="button" data-b="ign" aria-pressed="false">Senderos</button>
         </div>
+        <label class="chk"><input type="checkbox" id="wmtOn"> Rutas señalizadas (GR · PR · SL)</label>
         <div class="glabel"><label for="hour">Sol</label><output id="hourv" for="hour"></output></div>
         <input type="range" id="hour" min="5" max="21.5" step="0.0833" value="11">
         <div id="sunnfo"></div>

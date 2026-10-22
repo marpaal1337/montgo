@@ -27,11 +27,17 @@ const map = new maplibregl.Map({
            tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'] },
     topo: { type: 'raster', tileSize: 256, maxzoom: 17, attribution: '© OpenTopoMap (CC-BY-SA), © OpenStreetMap',
             tiles: ['https://a.tile.opentopomap.org/{z}/{x}/{y}.png', 'https://b.tile.opentopomap.org/{z}/{x}/{y}.png'] },
+    ign: { type: 'raster', tileSize: 256, maxzoom: 17, attribution: '© Instituto Geográfico Nacional de España (CC BY 4.0)',
+           tiles: ['https://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&layer=MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}&format=image/jpeg'] },
+    wmt: { type: 'raster', tileSize: 256, maxzoom: 18, attribution: 'Rutas © Waymarked Trails (CC BY-SA), © OpenStreetMap',
+           tiles: ['https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png'] },
     dem: { type: 'raster-dem', encoding: 'terrarium', tileSize: 256, maxzoom: 15, attribution: 'AWS Terrain Tiles',
            tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'] }
   }, layers: [
     { id: 'sat', type: 'raster', source: 'sat' },
     { id: 'topo', type: 'raster', source: 'topo', layout: { visibility: 'none' } },
+    { id: 'ign', type: 'raster', source: 'ign', layout: { visibility: 'none' } },
+    { id: 'wmt', type: 'raster', source: 'wmt', layout: { visibility: 'none' }, paint: { 'raster-opacity': 0.85 } },
     { id: 'hill', type: 'hillshade', source: 'dem', paint: { 'hillshade-exaggeration': 0.25 } }
   ], terrain: { source: 'dem', exaggeration: 1 } }
 });
@@ -318,7 +324,7 @@ function setSun(h) {
   map.setPaintProperty('hill', 'hillshade-illumination-anchor', 'map');
   map.setPaintProperty('hill', 'hillshade-illumination-direction', s.az);
   map.setPaintProperty('hill', 'hillshade-exaggeration', 0.9 - 0.55 * Math.min(Math.max(s.el, 0), 45) / 45);
-  ['sat', 'topo'].forEach(l => map.setPaintProperty(l, 'raster-brightness-max', 0.3 + 0.7 * k));
+  ['sat', 'topo', 'ign'].forEach(l => map.setPaintProperty(l, 'raster-brightness-max', 0.3 + 0.7 * k));
 }
 function sunAt(lat, lon) { setSunLocation(lat, lon); setSun(+$('hour').value); }   // fecha de hoy en la ubicación dada
 $('hour').addEventListener('input', e => setSun(+e.target.value));
@@ -326,10 +332,13 @@ $('hour').addEventListener('input', e => setSun(+e.target.value));
 $('base').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   sat = b.dataset.b === 'sat';
-  map.setLayoutProperty('sat', 'visibility', sat ? 'visible' : 'none');
-  map.setLayoutProperty('topo', 'visibility', sat ? 'none' : 'visible');
+  ['sat', 'topo', 'ign'].forEach(l => map.setLayoutProperty(l, 'visibility', l === b.dataset.b ? 'visible' : 'none'));
   document.querySelectorAll('#base button').forEach(o => o.setAttribute('aria-pressed', o === b));
 });
+$('wmtOn').addEventListener('change', e => {
+  map.setLayoutProperty('wmt', 'visibility', e.target.checked ? 'visible' : 'none'); store('cims:wmt', e.target.checked);
+});
+if (store('cims:wmt')) { $('wmtOn').checked = true; styleReady.then(() => map.setLayoutProperty('wmt', 'visibility', 'visible')); }
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   KEYS.forEach(k => { if (map.getLayer('line-' + k)) map.setPaintProperty('line-' + k, 'line-color', routeColor(k)); });
   if (hoverMk && cur) hoverMk.getElement().firstChild.style.setProperty('--d', routeColor(cur));
