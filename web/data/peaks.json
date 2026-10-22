@@ -6,7 +6,10 @@
   "lat": 40.22276,
   "lon": -0.34974,
   "prov": "Castelló",
-  "comarca": "Els Ports / l'Alcalatén",
+  "comarca": "els Ports / l'Alcalatén",
+  "tier": "emblematica",
+  "prom": 200,
+  "diff": 0,
   "routes": [
    {
     "id": "A",
@@ -19,7 +22,8 @@
     "drive": {
      "km": 154,
      "min": 221
-    }
+    },
+    "diff": 0
    },
    {
     "id": "B",
@@ -31,7 +35,8 @@
     "drive": {
      "km": 151,
      "min": 185
-    }
+    },
+    "diff": 0
    },
    {
     "id": "C",
@@ -43,7 +48,8 @@
     "drive": {
      "km": 120,
      "min": 210
-    }
+    },
+    "diff": 2
    }
   ]
  },
@@ -54,7 +60,10 @@
   "lat": 38.64956,
   "lon": -0.26613,
   "prov": "Alacant",
-  "comarca": "El Comtat / la Marina Baixa",
+  "comarca": "el Comtat / la Marina Baixa",
+  "tier": "emblematica",
+  "prom": 200,
+  "diff": 0,
   "routes": [
    {
     "id": "A",
@@ -67,7 +76,8 @@
     "drive": {
      "km": 134,
      "min": 109
-    }
+    },
+    "diff": 0
    },
    {
     "id": "B",
@@ -80,7 +90,8 @@
     "drive": {
      "km": 133,
      "min": 104
-    }
+    },
+    "diff": 2
    },
    {
     "id": "C",
@@ -92,7 +103,8 @@
     "drive": {
      "km": 134,
      "min": 107
-    }
+    },
+    "diff": 3
    }
   ]
  },
@@ -104,6 +116,9 @@
   "lon": -0.19307,
   "prov": "Alacant",
   "comarca": "la Marina Baixa",
+  "tier": "emblematica",
+  "prom": 200,
+  "diff": 2,
   "routes": [
    {
     "id": "A",
@@ -116,7 +131,8 @@
     "drive": {
      "km": 147,
      "min": 117
-    }
+    },
+    "diff": 2
    },
    {
     "id": "B",
@@ -129,7 +145,8 @@
     "drive": {
      "km": 149,
      "min": 107
-    }
+    },
+    "diff": 2
    },
    {
     "id": "C",
@@ -138,11 +155,12 @@
     "up": 926,
     "t_up": 3.06,
     "max_slope": 46,
-    "marked": "PR-CV 13 + PR-CV 17",
+    "marked": "PR-CV 17 + PR-CV 13",
     "drive": {
      "km": 145,
      "min": 115
-    }
+    },
+    "diff": 2
    }
   ]
  },
@@ -154,6 +172,9 @@
   "lon": -0.39529,
   "prov": "Alacant",
   "comarca": "l'Alacantí",
+  "tier": "emblematica",
+  "prom": 200,
+  "diff": 1,
   "routes": [
    {
     "id": "A",
@@ -165,7 +186,8 @@
     "drive": {
      "km": 177,
      "min": 123
-    }
+    },
+    "diff": 2
    },
    {
     "id": "B",
@@ -178,7 +200,8 @@
     "drive": {
      "km": 147,
      "min": 114
-    }
+    },
+    "diff": 1
    },
    {
     "id": "C",
@@ -190,7 +213,8 @@
     "drive": {
      "km": 175,
      "min": 119
-    }
+    },
+    "diff": 2
    }
   ]
  },
@@ -202,6 +226,9 @@
   "lon": -0.05499,
   "prov": "Alacant",
   "comarca": "la Marina Baixa",
+  "tier": "destacada",
+  "prom": 200,
+  "diff": 2,
   "routes": [
    {
     "id": "A",
@@ -214,7 +241,8 @@
     "drive": {
      "km": 141,
      "min": 102
-    }
+    },
+    "diff": 3
    },
    {
     "id": "B",
@@ -226,7 +254,8 @@
     "drive": {
      "km": 130,
      "min": 90
-    }
+    },
+    "diff": 2
    },
    {
     "id": "C",
@@ -238,7 +267,8 @@
     "drive": {
      "km": 121,
      "min": 87
-    }
+    },
+    "diff": 2
    }
   ]
  },
@@ -250,6 +280,9 @@
   "lon": -0.26658,
   "prov": "València",
   "comarca": "la Safor / la Costera",
+  "tier": "emblematica",
+  "prom": 200,
+  "diff": 1,
   "routes": [
    {
     "id": "A",
@@ -262,7 +295,8 @@
     "drive": {
      "km": 77,
      "min": 63
-    }
+    },
+    "diff": 1
    },
    {
     "id": "B",
@@ -275,7 +309,8 @@
     "drive": {
      "km": 62,
      "min": 65
-    }
+    },
+    "diff": 1
    },
    {
     "id": "C",
@@ -288,7 +323,8 @@
     "drive": {
      "km": 70,
      "min": 63
-    }
+    },
+    "diff": 1
    }
   ]
  },
@@ -300,6 +336,9 @@
   "lon": 0.12937,
   "prov": "Alacant",
   "comarca": "la Marina Alta",
+  "tier": "destacada",
+  "prom": 200,
+  "diff": 0,
   "routes": [
    {
     "id": "A",
@@ -312,7 +351,8 @@
     "drive": {
      "km": 115,
      "min": 93
-    }
+    },
+    "diff": 0
    },
    {
     "id": "B",
@@ -325,7 +365,8 @@
     "drive": {
      "km": 106,
      "min": 76
-    }
+    },
+    "diff": 2
    },
    {
     "id": "C",
@@ -337,7 +378,8 @@
     "drive": {
      "km": 107,
      "min": 80
-    }
+    },
+    "diff": 2
    }
   ]
  }
