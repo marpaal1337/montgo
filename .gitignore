@@ -3,3 +3,10 @@ __pycache__/
 
 # Volcado grande de OSM (regenerable con scripts/fetch_osm.py)
 data/osm.json
+
+# Volcados de OSM por cima (regenerables con scripts/cimas_fetch.py)
+data/cimas/*_osm.json
+
+# DEM Terrarium y volcado de picos del catálogo (regenerables con scripts/cimas_catalog.py)
+data/cimas/dem/
+data/cimas/_peaks_cv_osm.json

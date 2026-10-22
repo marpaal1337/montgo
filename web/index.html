@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cims valencians · rutas en 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <div id="map"></div>
+    <section id="mapctl" aria-label="Capas y sol del mapa">
+      <button type="button" id="ctlBtn" aria-expanded="false" aria-controls="ctlBody" aria-label="Capas y sol">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg>
+      </button>
+      <div id="ctlBody">
+        <div class="seg" id="base" role="group" aria-label="Mapa base">
+          <button type="button" data-b="sat" aria-pressed="true">Satélite</button>
+          <button type="button" data-b="topo" aria-pressed="false">Topográfico</button>
+        </div>
+        <div class="glabel"><label for="hour">Sol</label><output id="hourv" for="hour"></output></div>
+        <input type="range" id="hour" min="5" max="21.5" step="0.0833" value="11">
+        <div id="sunnfo"></div>
+      </div>
+    </section>
+    <aside id="side" aria-label="Cimas y rutas">
+      <button type="button" id="sheetBtn" aria-expanded="true" aria-label="Plegar panel"><i></i></button>
+
+      <section id="listView">
+        <header>
+          <h1>Cims valencians</h1>
+          <p class="sub">Elige una cima y compara sus rutas en 3D. <span id="count"></span></p>
+          <div class="filters">
+            <input type="search" id="q" placeholder="Buscar cima o comarca…" aria-label="Buscar cima">
+            <button class="chip" data-prov="Castelló" aria-pressed="false">Castelló</button>
+            <button class="chip" data-prov="València" aria-pressed="false">València</button>
+            <button class="chip" data-prov="Alacant" aria-pressed="false">Alacant</button>
+            <button class="chip" id="sortBtn" aria-pressed="false">Orden: altura</button>
+          </div>
+          <div class="filters" role="group" aria-label="Relevancia y dificultad">
+            <button class="chip" data-tier="emblematica" aria-pressed="false">Emblemáticas</button>
+            <button class="chip" data-tier="destacada" aria-pressed="false">Destacadas</button>
+            <button class="chip" data-tier="local" aria-pressed="false">Locales</button>
+            <span class="sep"></span>
+            <button class="chip" data-diff="0" aria-pressed="false">Fácil</button>
+            <button class="chip" data-diff="1" aria-pressed="false">Moderada</button>
+            <button class="chip" data-diff="2" aria-pressed="false">Exigente</button>
+            <button class="chip" data-diff="3" aria-pressed="false">Dura</button>
+          </div>
+        </header>
+        <ul id="list"></ul>
+      </section>
+
+      <section id="peakView" hidden>
+        <button class="back" id="back" type="button">← Todas las cimas</button>
+        <div class="head"><h1 id="pname"></h1>
+          <span><button class="mini-btn" id="doneBtn" type="button" aria-pressed="false">☆ Hecha</button>
+          <button class="mini-btn more-btn" id="moreBtn" type="button" aria-expanded="true" aria-controls="more">Detalles</button></span></div>
+        <p class="sub" id="psub"></p>
+        <div class="tabs" id="tabs"></div>
+        <div id="name"></div>
+        <dl class="stats" id="stats"></dl>
+        <div class="actions" style="margin-bottom:12px">
+          <button class="btn main" id="fly" type="button">Sobrevuelo</button>
+          <button class="btn" id="frame" type="button">Ver todo</button>
+        </div>
+        <div id="more">
+          <details class="cmp" id="cmpBox" open><summary>Comparar rutas</summary><table id="cmp"></table></details>
+          <div class="grp">
+            <div class="glabel"><span>Pendiente del track</span></div>
+            <div id="legend"><i id="lgbar"></i><div><span>0</span><span>20</span><span>40</span><span>60 %</span></div></div>
+          </div>
+          <p class="note" id="note"></p>
+        </div>
+      </section>
+
+    </aside>
+  </div>
+  <div id="prof" hidden><div id="tip"></div><div id="svgbox" style="height:100%"></div></div>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<!-- lógica del sol y color por pendiente compartida con el visor del Montgó (hay que servir la raíz del repo) -->
+<script src="../scripts/shared.js"></script>
+<script src="clusters.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

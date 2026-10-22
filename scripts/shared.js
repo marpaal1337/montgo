@@ -1,5 +1,5 @@
-/* ---- lógica común al visor local y al artifact: posición del sol y color por pendiente ---- */
-const SUN = { lat: 38.80, lon: 0.13, n: 298, tz: 1 };   // 25-oct-2026, Montgó, hora local = UTC+1 (ya en horario de invierno)
+/* ---- lógica común al visor local, al artifact y a la web de cimas: posición del sol y color por pendiente ---- */
+let SUN = { lat: 38.80, lon: 0.13, n: 298, tz: 1 };   // por defecto: 25-oct-2026, Montgó, hora local = UTC+1 (ya en horario de invierno)
 const RAD = Math.PI / 180;
 function sunPos(h) {
   const B = 360 / 365 * (SUN.n - 81) * RAD;
@@ -10,15 +10,23 @@ function sunPos(h) {
   const az = Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(decl) * Math.cos(phi));
   return { el: el / RAD, az: (az / RAD + 180 + 360) % 360 };   // acimut desde el norte, sentido horario
 }
-const SUN_RISE_SET = (() => {
+function riseSet() {
   let rise = null, set = null;
-  for (let h = 3; h < 22; h += 1 / 60) {
+  for (let h = 3; h < 23; h += 1 / 60) {
     const up = sunPos(h).el > -0.83;   // borde superior del disco con refracción
     if (up && rise === null) rise = h;
     if (!up && rise !== null && set === null) set = h;
   }
   return { rise, set };
-})();
+}
+let SUN_RISE_SET = riseSet();
+/* ubicación y fecha del sol (hora oficial peninsular: UTC+1, +2 entre el último domingo de marzo y el de octubre) */
+function setSunLocation(lat, lon, date = new Date()) {
+  const y = date.getFullYear(), lastSun = m => { const d = new Date(Date.UTC(y, m + 1, 0, 1)); d.setUTCDate(d.getUTCDate() - d.getUTCDay()); return d; };
+  const noon = new Date(y, date.getMonth(), date.getDate(), 12), dst = noon >= lastSun(2) && noon < lastSun(9);   // al mediodía: el día del cambio ya cuenta con la hora nueva
+  SUN = { lat, lon, n: Math.round((Date.UTC(y, date.getMonth(), date.getDate()) - Date.UTC(y, 0, 0)) / 864e5), tz: dst ? 2 : 1 };
+  SUN_RISE_SET = riseSet();
+}
 const fmtClock = h => { const m = Math.round(h * 60); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); };
 const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
 const compass = az => COMPASS[Math.round(az / 45) % 8];
