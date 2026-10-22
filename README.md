@@ -38,3 +38,20 @@ Archivos: `out/ruta_*.gpx` (track + waypoints), `out/perfil_A|B|C.png`, `out/per
 - Cotejar con Wikiloc / Komoot antes de salir.
 
 Regenerar: `python scripts/fetch_osm.py data/osm.json && python scripts/build_routes.py` (necesita matplotlib y networkx).
+
+## Cims valencians (mapa 3D con comparador de rutas)
+
+Web estática en `web/` (MapLibre), con **un solo mapa 3D**: la vista regional muestra las cimas y una lista con filtros (provincia, búsqueda, orden por altura o cercanía a Valencia); al elegir una, la cámara vuela hasta ella y aparece el visor 3D de sus rutas (pestañas A/B/C, color por pendiente, sol, sobrevuelo, perfil inferior con las rutas superpuestas y una tabla plegable «Comparar rutas» con la mejor de cada métrica). El enlace `#/cima/<id>` abre directamente una cima. Piloto con 7 cimas: Penyagolosa, Aitana, Puig Campana, Cabeçó d'Or, Bèrnia, Mondúver y Montgó.
+
+Para verla en local hay que servir la **raíz del repositorio** (la web carga `scripts/shared.js`): `python -m http.server` y abrir `/web/`. `index.html` de la raíz redirige ahí (GitHub Pages). El visor antiguo solo del Montgó sigue en `out/visor_3d.html`.
+
+Pipeline (solo biblioteca estándar; no necesita networkx ni matplotlib):
+1. `data/cimas/peaks.json`: catálogo de cimas (coordenadas y altura verificadas en OSM).
+2. `python scripts/cimas_fetch.py [id…]`: descarga de Overpass la red de sendas, las relaciones de senderismo y los puntos de interés (`data/cimas/*_osm.json`, no se versiona).
+3. `python scripts/cimas_candidates.py <id>`: propone salidas candidatas por sector de orientación para elegir rutas.
+4. `data/cimas/routes.json`: rutas por cima (punto de salida + cumbre, o un GPX existente).
+5. `python scripts/build_cimas.py [id…]`: enruta sobre OSM (las sendas PR/GR/SL pesan más), saca altitudes de EU-DEM 25 m, calcula las métricas y escribe `web/data/*.json`. Añade el tiempo en coche desde Valencia (OSRM público) y el nombre de la salida (Nominatim).
+
+Código: `web/index.html` (estructura), `web/app.css`, `web/app.js` (mapa, lista, visor), `web/clusters.js` (clase `PeakClusters`: agrupa los marcadores de cimas cuyas etiquetas se solapan con el zoom actual y, al pulsar un grupo, acerca la cámara hasta deshacerlo) y `scripts/shared.js` (sol y color por pendiente, compartido con el visor del Montgó; `setSunLocation(lat, lon, fecha)` lo adapta a cada cima, por defecto con la fecha de hoy).
+
+Limitaciones: las rutas son calculadas, no grabaciones GPS, y las salidas piloto son aparcamientos de OSM elegidos por sector; conviene revisarlas a mano antes de fiarse de ellas. «Señalizada» cuenta solo relaciones GR/PR/SL de OSM. Con cientos de cimas convendría pasar de marcadores HTML a una capa de símbolos de MapLibre (necesita glifos).
