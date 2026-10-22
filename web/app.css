@@ -205,3 +205,5 @@ details.cmp td.best::after { content: ' ●'; font-size: 7px; vertical-align: mi
   .more-btn { display: block; }
   #prof { height: 104px; }
 }
+#offBtn { flex: 1 1 100%; }
+.actions { flex-wrap: wrap; }

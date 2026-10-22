@@ -9,6 +9,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <link rel="stylesheet" href="app.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#2b6e3f">
 </head>
 <body>
 <div id="app">
@@ -83,6 +86,7 @@
         <div class="actions" style="margin-bottom:12px">
           <button class="btn main" id="fly" type="button">Sobrevuelo</button>
           <button class="btn" id="frame" type="button">Ver todo</button>
+          <button class="btn" id="offBtn" type="button" title="Guarda el mapa de Senderos y el relieve de esta zona para verlos sin cobertura">Guardar mapa offline</button>
         </div>
         <div id="more">
           <details class="cmp" id="cmpBox" open><summary>Comparar rutas</summary><table id="cmp"></table></details>
@@ -105,5 +109,6 @@
 <script src="clusters.js"></script>
 <script src="app.js"></script>
 <script src="track.js"></script>
+<script src="offline.js"></script>
 </body>
 </html>
