@@ -46,6 +46,18 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .02em; margin: 0; text-tra
 #list .n { font: 700 20px/1.1 var(--display); text-transform: uppercase; letter-spacing: .02em; }
 #list .e { font: 500 15px var(--mono); text-align: right; }
 #list .s { grid-column: 1 / -1; font-size: 12px; color: var(--mut); }
+.filters + .filters { margin-top: 6px; }
+.filters .sep { flex: 0 0 1px; align-self: stretch; background: var(--line); }
+/* insignias de relevancia (forma + color) y dificultad (verde → rojo) */
+.bd { display: inline-block; margin-right: 5px; padding: 0 6px; border-radius: 4px; font: 600 10px/16px var(--mono); text-transform: uppercase; letter-spacing: .04em; border: 1px solid var(--line); vertical-align: 1px; }
+.bd.t-emblematica { background: var(--accent); border-color: var(--accent); color: var(--panel); }
+.bd.t-emblematica::before { content: '▲ '; }
+.bd.t-destacada::before { content: '△ '; }
+.bd.g-0 { color: #2f9e44; border-color: #2f9e44; }
+.bd.g-1 { color: #b08900; border-color: #b08900; }
+.bd.g-2 { color: #d9480f; border-color: #d9480f; }
+.bd.g-3 { color: #c92a2a; border-color: #c92a2a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .bd.g-0 { color: #69db7c; border-color: #69db7c; } :root:not([data-theme="light"]) .bd.g-1 { color: #ffd43b; border-color: #ffd43b; } :root:not([data-theme="light"]) .bd.g-2 { color: #ff922b; border-color: #ff922b; } :root:not([data-theme="light"]) .bd.g-3 { color: #ff8787; border-color: #ff8787; } }
 .done { color: #d9a400; }
 
 /* cima seleccionada */
@@ -111,6 +123,8 @@ details.cmp td.best::after { content: ' ●'; font-size: 7px; vertical-align: mi
 .peak-pin { display: flex; flex-direction: column; align-items: center; cursor: pointer; border: 0; background: none; padding: 0; }
 .peak-pin i { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid var(--accent); filter: drop-shadow(0 1px 2px #0008); }
 .peak-pin.done i { border-bottom-color: #f2b705; }
+.peak-pin.t-emblematica i { border-left-width: 11px; border-right-width: 11px; border-bottom-width: 19px; }
+.peak-pin.t-local span { opacity: .85; }
 .peak-pin span { order: -1; margin-bottom: 2px; white-space: nowrap; background: var(--panel); color: var(--fg); border: 1px solid var(--line);
                  border-radius: 5px; padding: 1px 7px; font: 500 11px var(--mono); box-shadow: 0 2px 8px #0003; }
 .peak-pin span b { font: 700 13px var(--display); text-transform: uppercase; letter-spacing: .03em; margin-right: 4px; }

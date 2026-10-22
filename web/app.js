@@ -11,10 +11,13 @@ function store(key, val) {   // preferencias por navegador; la página funciona 
   try { if (val === undefined) return JSON.parse(localStorage.getItem(key)); localStorage.setItem(key, JSON.stringify(val)); } catch (e) { return null; }
 }
 const doneSet = () => new Set(store('cims:done') || []);
+const TIERS = { emblematica: 'Emblemática', destacada: 'Destacada', local: 'Local' }, TIER_RANK = { emblematica: 0, destacada: 1, local: 2 };
+const GRADES = ['Fácil', 'Moderada', 'Exigente', 'Dura'];
+const badges = p => `<span class="bd t-${p.tier}">${TIERS[p.tier]}</span><span class="bd g-${p.diff}">${GRADES[p.diff]}</span>`;
 
 let PEAKS = [], P = null, ROUTES = {}, KEYS = [], cur = 'A', markers = [], hoverMk = null, flying = null, sat = true;
 let clusters = null;
-const filt = { q: '', prov: null, sort: 'ele' }, cache = {};
+const filt = { q: '', prov: null, tier: null, diff: null, sort: 'ele' }, cache = {};
 
 /* ====================== mapa ====================== */
 const map = new maplibregl.Map({
@@ -58,13 +61,14 @@ function frameAll(duration) {
 const nearest = p => p.routes.reduce((m, r) => Math.min(m, r.drive ? r.drive.min : Infinity), Infinity);
 function renderList() {
   const done = doneSet(), q = filt.q.trim().toLowerCase();
-  let ps = PEAKS.filter(p => (!filt.prov || p.prov === filt.prov) && (!q || (p.name + ' ' + p.comarca + ' ' + p.prov).toLowerCase().includes(q)));
-  ps = ps.sort(filt.sort === 'ele' ? (a, b) => b.ele - a.ele : (a, b) => nearest(a) - nearest(b));
-  $('count').textContent = `${ps.length} de ${PEAKS.length} · ${done.size} hechas`;
+  let ps = PEAKS.filter(p => (!filt.prov || p.prov === filt.prov) && (!filt.tier || p.tier === filt.tier) && (filt.diff === null || p.diff === filt.diff) && (!q || (p.name + ' ' + p.comarca + ' ' + p.prov).toLowerCase().includes(q)));
+  ps = ps.sort(filt.sort === 'ele' ? (a, b) => b.ele - a.ele : filt.sort === 'tier' ? (a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || b.ele - a.ele : (a, b) => nearest(a) - nearest(b));
+  const emb = PEAKS.filter(p => p.tier === 'emblematica');
+  $('count').textContent = `${ps.length} de ${PEAKS.length} · ${done.size} hechas · emblemáticas ${emb.filter(p => done.has(p.id)).length}/${emb.length}`;
   $('list').innerHTML = ps.map(p => {
     const drv = nearest(p), km = p.routes.map(r => r.km.toFixed(1)).join(' · ');
     return `<li><a href="#/cima/${p.id}" data-id="${p.id}"><span class="n">${done.has(p.id) ? '<span class="done">★</span> ' : ''}${esc(p.name)}</span><span class="e">${p.ele} m</span>
-      <span class="s">${esc(p.comarca)} · ${p.routes.length} rutas${km ? ` (${km} km)` : ''}${drv < Infinity ? ` · ${drv} min desde Valencia` : ''}</span></a></li>`;
+      <span class="s">${badges(p)}${esc(p.comarca)} · ${p.routes.length} rutas${km ? ` (${km} km)` : ''}${drv < Infinity ? ` · ${drv} min desde Valencia` : ''}</span></a></li>`;
   }).join('');
   clusters?.setFilter(new Set(ps.map(p => p.id)));
   $('list').querySelectorAll('a').forEach(a => {
@@ -77,7 +81,7 @@ function addPeakMarkers() {
   clusters = new PeakClusters(map, PEAKS, {
     createPin: p => {
       const el = document.createElement('button');
-      el.className = 'peak-pin' + (done.has(p.id) ? ' done' : '');
+      el.className = 'peak-pin t-' + p.tier + (done.has(p.id) ? ' done' : '');
       el.innerHTML = `<span><b>${esc(p.name)}</b>${p.ele}</span><i></i>`;
       el.dataset.label = `${p.name}, ${p.ele} metros`;
       return el;
@@ -98,9 +102,21 @@ document.querySelectorAll('.chip[data-prov]').forEach(b => b.onclick = () => {
   document.querySelectorAll('.chip[data-prov]').forEach(o => o.setAttribute('aria-pressed', o.dataset.prov === filt.prov));
   renderList();
 });
+document.querySelectorAll('.chip[data-tier]').forEach(b => b.onclick = () => {
+  filt.tier = filt.tier === b.dataset.tier ? null : b.dataset.tier;
+  document.querySelectorAll('.chip[data-tier]').forEach(o => o.setAttribute('aria-pressed', o.dataset.tier === filt.tier));
+  renderList();
+});
+document.querySelectorAll('.chip[data-diff]').forEach(b => b.onclick = () => {
+  const d = +b.dataset.diff;
+  filt.diff = filt.diff === d ? null : d;
+  document.querySelectorAll('.chip[data-diff]').forEach(o => o.setAttribute('aria-pressed', +o.dataset.diff === filt.diff));
+  renderList();
+});
+const SORTS = { ele: 'Orden: altura', tier: 'Orden: relevancia', drive: 'Orden: cercanía a Valencia' }, SORT_NEXT = { ele: 'tier', tier: 'drive', drive: 'ele' };
 $('sortBtn').onclick = () => {
-  filt.sort = filt.sort === 'ele' ? 'drive' : 'ele';
-  $('sortBtn').textContent = filt.sort === 'ele' ? 'Orden: altura' : 'Orden: cercanía a Valencia';
+  filt.sort = SORT_NEXT[filt.sort];
+  $('sortBtn').textContent = SORTS[filt.sort];
   renderList();
 };
 $('q').oninput = e => { filt.q = e.target.value; renderList(); };
@@ -136,7 +152,7 @@ function select(k) {
   $('name').textContent = r.name + (r.marked ? ' · ' + r.marked : '');
   $('stats').innerHTML = [
     ['Distancia', String(r.km).replace('.', ',') + ' km'], ['Desnivel', '+' + r.up + ' m'], ['Cima', P.ele + ' m'],
-    ['Subida', fmtH(r.t_up)], ['Bajada', fmtH(r.t_dn)], ['Pend. máx', r.maxslope + ' %']
+    ['Subida', fmtH(r.t_up)], ['Bajada', fmtH(r.t_dn)], ['Dificultad', GRADES[r.diff]]
   ].map(([l, v]) => `<div><dt>${l}</dt><dd>${v}</dd></div>`).join('');
   KEYS.forEach(j => {
     const on = j === k;
@@ -182,6 +198,7 @@ const METRICS = [
   ['Pend. media', r => r.avg_slope, v => v.toFixed(0) + ' %', 'min'],
   ['Pend. máx', r => r.max_slope, v => v + ' %', 'min'],
   ['Tramos > 30 %', r => r.steep_m, v => v ? v + ' m' : '—', 'min'],
+  ['Dificultad', r => r.diff, v => GRADES[v], 'min'],
   ['Subida', r => r.t_up, fmtH, 'min'],
   ['Bajada', r => r.t_dn, fmtH, 'min'],
   ['Altitud salida', r => r.z0, v => v + ' m', null],
@@ -354,7 +371,7 @@ async function showPeak(id) {
   $('listView').hidden = true; $('peakView').hidden = false; $('prof').hidden = false;
   document.title = `${P.name} · Cims valencians`;
   $('pname').textContent = P.name;
-  $('psub').textContent = `${P.ele} m · ${P.comarca} · ${P.prov}`;
+  $('psub').innerHTML = `${P.ele} m · ${esc(P.comarca)} · ${esc(P.prov)}<br>${badges(peak)}${peak.prom ? `<span class="mut">prominencia ${peak.prom >= 200 && P.prom_min ? '≥ ' : ''}${peak.prom} m</span>` : ''}`;
   $('tabs').innerHTML = KEYS.map(k => `<button class="tab" type="button" data-k="${k}" style="--c:var(--r${k})" aria-pressed="false"><b>Ruta ${k}</b><span>${String(ROUTES[k].km).replace('.', ',')} km</span></button>`).join('');
   $('note').textContent = 'Rutas calculadas sobre OpenStreetMap (pesan más las sendas PR/GR/SL) y altitudes EU-DEM 25 m: no son grabaciones GPS. Tiempos con Naismith, sin paradas. Contrasta con el estado real de la senda.';
   syncDone(); renderTable();
