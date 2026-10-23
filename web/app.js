@@ -27,11 +27,17 @@ const map = new maplibregl.Map({
            tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'] },
     topo: { type: 'raster', tileSize: 256, maxzoom: 17, attribution: '© OpenTopoMap (CC-BY-SA), © OpenStreetMap',
             tiles: ['https://a.tile.opentopomap.org/{z}/{x}/{y}.png', 'https://b.tile.opentopomap.org/{z}/{x}/{y}.png'] },
+    ign: { type: 'raster', tileSize: 256, maxzoom: 17, attribution: '© Instituto Geográfico Nacional de España (CC BY 4.0)',
+           tiles: ['https://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&layer=MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}&format=image/jpeg'] },
+    wmt: { type: 'raster', tileSize: 256, maxzoom: 18, attribution: 'Rutas © Waymarked Trails (CC BY-SA), © OpenStreetMap',
+           tiles: ['https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png'] },
     dem: { type: 'raster-dem', encoding: 'terrarium', tileSize: 256, maxzoom: 15, attribution: 'AWS Terrain Tiles',
            tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'] }
   }, layers: [
     { id: 'sat', type: 'raster', source: 'sat' },
     { id: 'topo', type: 'raster', source: 'topo', layout: { visibility: 'none' } },
+    { id: 'ign', type: 'raster', source: 'ign', layout: { visibility: 'none' } },
+    { id: 'wmt', type: 'raster', source: 'wmt', layout: { visibility: 'none' }, paint: { 'raster-opacity': 0.85 } },
     { id: 'hill', type: 'hillshade', source: 'dem', paint: { 'hillshade-exaggeration': 0.25 } }
   ], terrain: { source: 'dem', exaggeration: 1 } }
 });
@@ -135,6 +141,7 @@ function addRoutes() {
     map.addLayer({ id: 'case-' + k, type: 'line', source: 'trk-' + k, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#fff', 'line-width': 7 } });
     map.addLayer({ id: 'line-' + k, type: 'line', source: 'trk-' + k, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': routeColor(k), 'line-width': 4 } });
   });
+  if (typeof Track !== 'undefined') Track.raise();   // mi track y mi posición por encima de las rutas
 }
 function removeRoutes() {
   KEYS.forEach(k => {
@@ -145,6 +152,11 @@ function removeRoutes() {
   if (hoverMk) { hoverMk.remove(); hoverMk = null; }
 }
 
+// hora límite de salida para volver con luz: puesta de sol − subida − bajada − 30 min de margen (Naismith no cuenta paradas)
+function lastStart(r) {
+  const h = SUN_RISE_SET.set - r.t_up - r.t_dn - 0.5;
+  return h < SUN_RISE_SET.rise ? 'Sin luz' : fmtClock(h);
+}
 function select(k) {
   stopFly(); cur = k;
   const r = ROUTES[k];
@@ -152,7 +164,8 @@ function select(k) {
   $('name').textContent = r.name + (r.marked ? ' · ' + r.marked : '');
   $('stats').innerHTML = [
     ['Distancia', String(r.km).replace('.', ',') + ' km'], ['Desnivel', '+' + r.up + ' m'], ['Cima', P.ele + ' m'],
-    ['Subida', fmtH(r.t_up)], ['Bajada', fmtH(r.t_dn)], ['Dificultad', GRADES[r.diff]]
+    ['Subida', fmtH(r.t_up)], ['Bajada', fmtH(r.t_dn)], ['Dificultad', GRADES[r.diff]],
+    ['Puesta de sol', fmtClock(SUN_RISE_SET.set)], ['Salir antes de', lastStart(r)]
   ].map(([l, v]) => `<div><dt>${l}</dt><dd>${v}</dd></div>`).join('');
   KEYS.forEach(j => {
     const on = j === k;
@@ -317,7 +330,7 @@ function setSun(h) {
   map.setPaintProperty('hill', 'hillshade-illumination-anchor', 'map');
   map.setPaintProperty('hill', 'hillshade-illumination-direction', s.az);
   map.setPaintProperty('hill', 'hillshade-exaggeration', 0.9 - 0.55 * Math.min(Math.max(s.el, 0), 45) / 45);
-  ['sat', 'topo'].forEach(l => map.setPaintProperty(l, 'raster-brightness-max', 0.3 + 0.7 * k));
+  ['sat', 'topo', 'ign'].forEach(l => map.setPaintProperty(l, 'raster-brightness-max', 0.3 + 0.7 * k));
 }
 function sunAt(lat, lon) { setSunLocation(lat, lon); setSun(+$('hour').value); }   // fecha de hoy en la ubicación dada
 $('hour').addEventListener('input', e => setSun(+e.target.value));
@@ -325,10 +338,13 @@ $('hour').addEventListener('input', e => setSun(+e.target.value));
 $('base').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   sat = b.dataset.b === 'sat';
-  map.setLayoutProperty('sat', 'visibility', sat ? 'visible' : 'none');
-  map.setLayoutProperty('topo', 'visibility', sat ? 'none' : 'visible');
+  ['sat', 'topo', 'ign'].forEach(l => map.setLayoutProperty(l, 'visibility', l === b.dataset.b ? 'visible' : 'none'));
   document.querySelectorAll('#base button').forEach(o => o.setAttribute('aria-pressed', o === b));
 });
+$('wmtOn').addEventListener('change', e => {
+  map.setLayoutProperty('wmt', 'visibility', e.target.checked ? 'visible' : 'none'); store('cims:wmt', e.target.checked);
+});
+if (store('cims:wmt')) { $('wmtOn').checked = true; styleReady.then(() => map.setLayoutProperty('wmt', 'visibility', 'visible')); }
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   KEYS.forEach(k => { if (map.getLayer('line-' + k)) map.setPaintProperty('line-' + k, 'line-color', routeColor(k)); });
   if (hoverMk && cur) hoverMk.getElement().firstChild.style.setProperty('--d', routeColor(cur));
@@ -393,3 +409,27 @@ fetch('data/peaks.json').then(r => r.json()).then(async d => {
   sunAt(...REGION); fitHome(0);
   if (/^#\/cima\//.test(location.hash)) route();
 }).catch(() => { $('listView').innerHTML = '<p style="padding:1rem">No se pudieron cargar los datos. Sirve la raíz del repositorio con un servidor local (<code>python -m http.server</code>) y abre <code>/web/</code>.</p>'; });
+
+/* ====================== sobre el terreno: posición real frente a la ruta y cima hecha automática ====================== */
+const NEAR_PEAK = 40, OFF_ROUTE = 50;   // m
+let offRoute = false;
+addEventListener('track:fix', e => {
+  const f = e.detail, el = $('routeInfo');
+  if (!f || f[4] > 50) { if (!f) { el.hidden = true; offRoute = false; } return; }
+  const hit = PEAKS.find(p => Track.hav(f, [p.lon, p.lat]) <= NEAR_PEAK);
+  if (hit && !doneSet().has(hit.id)) {
+    const s = doneSet(); s.add(hit.id); store('cims:done', [...s]);
+    if (P) syncDone();
+    renderList(); clusters?.refresh();
+    Track.say('★ ' + hit.name + ' marcada como hecha.', 10000);
+  }
+  if (!P || !KEYS.length) { el.hidden = true; offRoute = false; return; }
+  const r = ROUTES[cur], pr = Track.projectOnLine(f, r.pts);
+  if (pr.d > 600) { el.hidden = true; offRoute = false; return; }   // lejos de la ruta: no es relevante
+  const off = pr.d > OFF_ROUTE, km = n => n.toFixed(1).replace('.', ',');
+  el.hidden = false; el.classList.toggle('off', off);
+  el.innerHTML = off ? `<b>Fuera de la ruta ${cur}</b><small>A ${Math.round(pr.d)} m del trazado. Pulsa «Volver» si te has perdido.</small>`
+                     : `<b>En la ruta ${cur}</b><small>${km(pr.along / 1000)} de ${km(r.km)} km · a ${Math.round(pr.d)} m del trazado</small>`;
+  if (off && !offRoute && navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  offRoute = off;
+});
