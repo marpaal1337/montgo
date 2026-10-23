@@ -49,7 +49,7 @@ def build_graph(osm):
         if e["type"] != "way" or "highway" not in e.get("tags", {}):
             continue
         pen = PEN.get(e["tags"]["highway"])
-        if pen is None:
+        if pen is None or "geometry" not in e:   # aparcamientos mapeados como vía llegan solo con `center`
             continue
         if e["id"] in marked:
             pen *= MARKED_BONUS
